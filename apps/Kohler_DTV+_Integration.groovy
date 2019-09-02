@@ -185,7 +185,6 @@ def authenticateKohlerKonnect() {
 			scope: "https://konnectkohler.onmicrosoft.com/platformapi/read openid profile offline_access",
 			code: authCode,
 			grant_type: "authorization_code",
-			code_verifier: "cQZMhh_D8-tdHYIZlH7pT_WTrUregav4ZfaCycp8q90",
 			redirect_uri: "msaldee521c5-2a72-4fcd-8c4d-a044e607ca8b://auth",
 			client_id: "dee521c5-2a72-4fcd-8c4d-a044e607ca8b"
 			
@@ -247,9 +246,9 @@ def updated() {
 
 def initialize() {
 	logDebug "initializing"
-	/*cleanupChildDevices()*/
+	cleanupChildDevices()
 	createChildDevices()
-	/*cleanupSettings()*/
+	cleanupSettings()
 }
 
 
@@ -319,37 +318,48 @@ def cleanupChildDevices()
 	}
 }
 
-/*
 def cleanupSettings()
 {
 	def allProperties = this.settings
 	def deviceName = null
 
 	for (property in allProperties) {
-		if (property.key.startsWith("doorbellMotionTrigger")) {
-			deviceName = property.key.replace("doorbellMotionTrigger","")
-			if (!getChildDevice("ring:" + deviceName)) {
-				app.removeSetting(property.key)
+		if (dtvValve1Count < 6)
+		{
+			for (def i = 6; i > dtvValve1Count; i--)
+			{
+				if (property.key == "dtvValve1_${i}")
+				{
+					app.removeSetting(property.key)
+				}
 			}
 		}
-		else if (property.key.startsWith("doorbellButtonTrigger")) {
-			deviceName = property.key.replace("doorbellButtonTrigger","")
-			if (!getChildDevice("ring:" + deviceName)) {
-				app.removeSetting(property.key)
+		if (dtvValve2Count < 6)
+		{
+			for (def i = 6; i > dtvValve2Count; i--)
+			{
+				if (property.key == "dtvValve2_${i}")
+				{
+					app.removeSetting(property.key)
+				}
 			}
 		}
-		else if (property.key.startsWith("cameraMotionTrigger")) {
-			logDebug "checking for ${property.key}"
-			deviceName = property.key.replace("cameraMotionTrigger","")
-			if (!getChildDevice("ring:" + deviceName)) {
-				logDebug "deleting it"
-				app.removeSetting(property.key)
+		if (dtvLightCount < 6)
+		{
+			for (def i = 6; i > dtvValve2Count; i--)
+			{
+				if (property.key == "dtvLight_${i}")
+				{
+					app.removeSetting(property.key)
+				}
+				else if (property.key == "dtvLightDimmable_${i}")
+				{
+					app.removeSetting(property.key)
+				}
 			}
 		}
 	}
 }
-
-*/
 
 def logDebug(msg) {
     if (settings?.debugOutput) {
