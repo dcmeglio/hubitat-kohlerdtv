@@ -19,6 +19,7 @@ preferences {
 	page(name: "prefKohlerIP", title: "Kohler DTV+ IP")
 	page(name: "prefKohlerDevices", title: "Devices")
 	page(name: "prefKohlerDeviceInfo", title: "Device Details")
+	page(name: "prefKohlerKonnectDeviceInfo", title: "Device Details")
 }
 
 def prefKohlerIP() {
@@ -41,12 +42,21 @@ def prefKohlerIP() {
 def prefKohlerDevices() {
 	if (dtvKonnect) {
 		authenticateKohlerKonnect()
+		getKonnectDevices()
+		return dynamicPage(name: "Devices", title: "Kohler DTV+ Devices", nextPage: "prefKohlerKonnectDeviceInfo", install: false, uninstall: false) {
+			section("Device Information") {
+				input(name: "dtv", type: "enum", title: "Device", required:false, multiple:false, options:state.dtvDevices)
+			}
+		}
 	}
-	return dynamicPage(name: "Devices", title: "Kohler DTV+ Devices", nextPage: "prefKohlerDeviceInfo", install: false, uninstall: false) {
-		section("Device Information") {
-            input("dtvValve1Count", "number", title: "How many valves does Controller 1 have?", required: true, range: "1..6", defaultValue: 1)
-            input("dtvValve2Count", "number", title: "How many valves does Controller 2 have?", required: true, range: "0..6", defaultValue: 0)
-            input("dtvLightCount", "number", title: "How many lights are configured?", required: true, range: "0..3", defaultValue: 0)
+	else
+	{
+		return dynamicPage(name: "Devices", title: "Kohler DTV+ Devices", nextPage: "prefKohlerDeviceInfo", install: false, uninstall: false) {
+			section("Device Information") {
+				input("dtvValve1Count", "number", title: "How many valves does Controller 1 have?", required: true, range: "1..6", defaultValue: 1)
+				input("dtvValve2Count", "number", title: "How many valves does Controller 2 have?", required: true, range: "0..6", defaultValue: 0)
+				input("dtvLightCount", "number", title: "How many lights are configured?", required: true, range: "0..3", defaultValue: 0)
+			}
 		}
 	}
 }
@@ -65,6 +75,26 @@ def prefKohlerDeviceInfo() {
             for (def i = 0; i < dtvLightCount; i++) {
                 input(name: "dtvLight_${i+1}", type: "text", title: "Light ${i+1} Name", required: true)
                 input(name: "dtvLightDimmable_${i+1}", type: "bool", title: "Light ${i+1} Dimmable?", required: true)
+            }
+        }
+	}
+}
+
+def prefKohlerKonnectDeviceInfo() {
+	getKonnectDeviceDetails(dtv)
+	
+	return dynamicPage(name: "prefKohlerKonnectDeviceInfo", title: "Device Information", install: true, uninstall: true) {
+		section("Valves") {
+            for (def i = 0; i < state.konnectDtvValve1Count; i++) {
+                input(name: "dtvValve1_${i+1}", type: "text", title: "Valve 1 Output ${i+1} Name", required: true)
+            }
+            for (def i = 0; i < state.konnectDtvValve2Count; i++) {
+                input(name: "dtvValve2_${i+1}", type: "text", title: "Valve 2 Output ${i+1} Name", required: true)
+            }
+        }
+        section("Lights") {
+            for (def i = 0; i < state.konnectDtvLightCount; i++) {
+                input(name: "dtvLight_${i+1}", type: "text", title: "Light ${i+1} Name", required: true)
             }
         }
 	}
@@ -215,7 +245,7 @@ def getAccessToken() {
 	}
 }
 
-def getDtvDevices() {
+def getKonnectDevices() {
 	def token = getAccessToken()
 	def params = [
 		uri: "https://connect.kohler.io",
@@ -225,9 +255,58 @@ def getDtvDevices() {
 			"Authorization": "Bearer ${token}"
 		]
 	]
+	state.dtvDevices = [:]
+
+	httpGet(params) { resp ->
+		for (def i = 0; i < resp.data.size(); i++)
+		{
+			def device = resp.data[i]
+			if (device.sku == "DTV")
+			{
+				state.dtvDevices[device.id] = device.logicalname
+			}
+		}
+	}
+}
+
+def getKonnectDeviceDetails(deviceId) {
+	def token = getAccessToken()
+		def params = [
+		uri: "https://connect.kohler.io",
+		path: "/api/v1/platform/devices/dtv/${deviceId}/configuration",
+		contentType: "application/json",
+		headers: [
+			"Authorization": "Bearer ${token}"
+		]
+	]
 	
-	
-	//https://connect.kohler.io/api/v1/platform/devices/dtv/ID/user/experience/
+	httpGet(params) { resp ->
+		state.konnectDtvValve1Count = resp.data.config.valveone?.configuredoutlets?.toInteger() ?: 0
+		state.konnectDtvValve2Count = resp.data.config.valvetwo?.configuredoutlets?.toInteger() ?: 0
+		
+		state.konnectDtvLightCount = 0
+		if (resp.data.config.lightmoduletype.light3 != "Na")
+			state.konnectDtvLightCount = 3
+		else if (resp.data.config.lightmoduletype.light2 != "Na")
+			state.konnectDtvLightCount = 2
+		else if (resp.data.config.lightmoduletype.light1 != "Na")
+			state.konnectDtvLightCount = 1
+			
+		if (resp.data.config.lightmoduletype.light1 == "Dimmer")
+			state.konnectDtvLight1Dimmable = true
+		else
+			state.konnectDtvLight1Dimmable = false
+			
+		if (resp.data.config.lightmoduletype.light2 == "Dimmer")
+			state.konnectDtvLight2Dimmable = true
+		else
+			state.konnectDtvLight2Dimmable = false
+			
+		if (resp.data.config.lightmoduletype.light3 == "Dimmer")
+			state.konnectDtvLight3Dimmable = true
+		else
+			state.konnectDtvLight3Dimmable = false
+	}
 }
 
 
@@ -246,8 +325,17 @@ def updated() {
 
 def initialize() {
 	logDebug "initializing"
-	cleanupChildDevices()
-	createChildDevices()
+	
+	if (!dtvKonnect)
+	{
+		cleanupChildDevices()
+		createChildDevices()
+	}
+	else
+	{
+		cleanupKonnectChildDevices()
+		createKonnectChildDevices()
+	}
 	cleanupSettings()
 }
 
@@ -277,6 +365,37 @@ def createChildDevices() {
     }
 }
 
+def createKonnectChildDevices() {
+    def showerDevice = getChildDevice("kohlerdtv:shower")
+	if (!showerDevice)
+	{
+		showerDevice = addChildDevice("kohlerdtv", "Kohler DTV+ Shower", "kohlerdtv:shower", 1234, ["name": dtvName, isComponent: true])
+	}
+    for (def i = 0; i < state.konnectDtvValve1Count; i++) {
+        if (!showerDevice.getChildDevice("kohlerdtv:valve1_${i+1}"))
+            showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve", "kohlerdtv:valve1_${i+1}", ["name": this.getProperty("dtvValve1_${i+1}"), isComponent: true])
+    }
+    for (def i = 0; i < state.konnectDtvValve2Count; i++) {
+        if (!showerDevice.getChildDevice("kohlerdtv:valve2_${i+1}"))
+            showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve", "kohlerdtv:valve2_${i+1}", ["name": this.getProperty("dtvValve2_${i+1}"), isComponent: true])
+    }
+    for (def i = 0; i < state.konnectDtvLightCount; i++) {
+        if (!showerDevice.getChildDevice("kohlerdtv:light_${i+1}"))
+        {
+			def dimmable = false
+			if (i == 0 && konnectDtvLight1Dimmable)
+				dimmable = true
+			else if (i == 1 && konnectDtvLight2Dimmable)
+				dimmable = true
+			else if (i == 2 && konnectDtvLight3Dimmable)
+				dimmable = true
+            if (dimmable)
+                showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Dimmable Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
+            else
+                showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
+        }
+    }
+}
 
 def cleanupChildDevices()
 {
@@ -308,6 +427,46 @@ def cleanupChildDevices()
 		if (dtvLightCount < 3)
 		{
 			for (def i = 3; i > dtvLightCount; i--)
+			{
+				if (deviceId == "kohlerdtv:light_${i}")
+				{
+					deleteChildDevice(device.deviceNetworkId)
+				}
+			}
+		}
+	}
+}
+
+def cleanupKonnectChildDevices()
+{
+	for (device in getChildDevices())
+	{
+		def deviceId = device.deviceNetworkId
+		if (state.konnectDtvValve1Count < 6)
+		{
+			for (def i = 6; i > state.konnectDtvValve1Count; i--)
+			{
+				if (deviceId == "kohlerdtv:valve1_${i}")
+				{
+					deleteChildDevice(device.deviceNetworkId)
+				}
+			}
+		}
+		
+		if (state.konnectDtvValve2Count < 6)
+		{
+			for (def i = 6; i > state.konnectDtvValve2Count; i--)
+			{
+				if (deviceId == "kohlerdtv:valve2_${i}")
+				{
+					deleteChildDevice(device.deviceNetworkId)
+				}
+			}
+		}
+		
+		if (state.konnectDtvLightCount < 3)
+		{
+			for (def i = 3; i > state.konnectDtvLightCount; i--)
 			{
 				if (deviceId == "kohlerdtv:light_${i}")
 				{
