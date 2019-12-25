@@ -11,6 +11,6 @@ metadata {
     }
 }
 
-def setLevel(leve, duration) {
+def setLevel(level, duration) {
 	//parent.handleOff(device, device.deviceNetworkId.split(":")[1])
 }
