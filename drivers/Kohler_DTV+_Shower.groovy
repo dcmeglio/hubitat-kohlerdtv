@@ -151,7 +151,9 @@ void deviceStatus(hubResponse)
         } 
         else {
             getChildDevice("kohlerdtv:valve1_1").sendEvent(name: "valve", value: "closed")
-        }        
+        }      
+
+		getChildDevice("kohlerdtv:valve1").sendEvent(name: "thermostatSetpoint", value: data.valve1Setpoint)
     } 
     
     if (parent.dtvValve2Count >= 6) {
@@ -200,6 +202,7 @@ void deviceStatus(hubResponse)
         } 
         else {
             getChildDevice("kohlerdtv:valve2_1").sendEvent(name: "valve", value: "closed")
-        }        
+        }    
+		getChildDevice("kohlerdtv:valve2").sendEvent(name: "thermostatSetpoint", value: data.valve2Setpoint)
     }
 }
