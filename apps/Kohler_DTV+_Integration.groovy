@@ -363,6 +363,18 @@ def createChildDevices() {
                 showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
         }
     }
+	
+	if (dtvValve1Count > 0)
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:valve1"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve1", ["name": "Valve 1", isComponent: true])
+	}
+	
+	if (dtvValve2Count > 0)
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:valve2"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve2", ["name": "Valve 2", isComponent: true])
+	}
 }
 
 def createKonnectChildDevices() {
@@ -395,6 +407,18 @@ def createKonnectChildDevices() {
                 showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
         }
     }
+	
+	if (dtvValve1Count > 0)
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:valve1"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve1", ["name": "Valve 1", isComponent: true])
+	}
+	
+	if (dtvValve2Count > 0)
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:valve2"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve2", ["name": "Valve 2", isComponent: true])
+	}
 }
 
 def cleanupChildDevices()
