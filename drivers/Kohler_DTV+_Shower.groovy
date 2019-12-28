@@ -300,7 +300,7 @@ void deviceStatus(hubResponse)
 		if (data.valve2Temp != null)
 			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
     }
-	log.debug "valve 1 status ${state.valve1Status}"
+	//log.debug "valve 1 status ${state.valve1Status}"
 }
 
 def sendCgiCommand(def name = "", def data = null, def handler = null)
@@ -332,13 +332,15 @@ def handleOpen(device, id) {
 	if (id.startsWith("valve1_"))
 	{
 		log.debug "turning on ${outputNumber} -> ${state.valve1PortAssignments[outputNumber-1]}"
-		valve1Outputs = buildValveString(state.valve1Status, true, state.valve1PortAssignments[outputNumber-1])
-		valve2Outputs = buildValveString(state.valve2Status, false, 999)
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, true, state.valve1PortAssignments[outputNumber-1])
+		state.valve1Status[outputNumber] = true
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, null)
 	}
 	else if (id.startsWith("valve2_"))
 	{
-		valve1Outputs = buildValveString(state.valve1Status, true, 999)
-		valve2Outputs = buildValveString(state.valve2Status, false, state.valve2PortAssignments[outputNumber-1])
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, true, null)
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, state.valve2PortAssignments[outputNumber-1])
+		state.valve2Status[outputNumber] = true
 	}
 	def data = [
 		valve_num : 1,
@@ -359,13 +361,15 @@ def handleClose(device, id) {
 	if (id.startsWith("valve1_"))
 	{
 		log.debug "turning off ${outputNumber} -> ${state.valve1PortAssignments[outputNumber-1]}"
-		valve1Outputs = buildValveString(state.valve1Status, false, state.valve1PortAssignments[outputNumber-1])
-		valve2Outputs = buildValveString(state.valve2Status, false, 999)
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, false, state.valve1PortAssignments[outputNumber-1])
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, null)
+		state.valve1Status[outputNumber] = false
 	}
 	else if (id.startsWith("valve2_"))
 	{
-		valve1Outputs = buildValveString(state.valve1Status, false, 999)
-		valve2Outputs = buildValveString(state.valve2Status, false, state.valve2PortAssignments[outputNumber-1])
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, false, null)
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, state.valve2PortAssignments[outputNumber-1])
+		state.valve2Status[outputNumber] = false
 	}
 	def data = [
 		valve_num : 1,
@@ -379,7 +383,7 @@ def handleClose(device, id) {
 	sendCgiCommand("quick_shower", data, null)
 }
 
-def buildValveString(currentValveStates, open, newValve) {
+def buildValveString(currentValveStates, currentValveAssignments, open, newValve) {
 	def result = ""
 	for (def i = 0; i < currentValveStates.size(); i++) {
 		if (i+1 == newValve) {
@@ -388,7 +392,7 @@ def buildValveString(currentValveStates, open, newValve) {
 		}
 		else {
 			if (currentValveStates[i] == true)
-				result += (i+1)
+				result += currentValveAssignments[i]
 		}
 	}
 	log.debug "valve string: ${result}"
