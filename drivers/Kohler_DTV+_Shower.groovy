@@ -50,11 +50,56 @@ def initialize() {
 def updateDevices()
 {
 	sendCgiCommand("system_info", null, deviceStatus)
+	sendCgiCommand("values", null, deviceConfig)
+}
+
+def deviceConfig(hubResponse)
+{
+	def data = parseJson(hubResponse.split("payload:")[1])
+	state.valve1PortAssignments = []
+	state.valve2PortAssignments = []
+	data.valve1PortsAvailable = data.valve1PortsAvailable.toInteger()
+	data.valve2PortsAvailable = data.valve2PortsAvailable.toInteger()
+	if (data.valve1PortsAvailable >= 6) {
+		state.valve1PortAssignments[data.valve1_outlet6_func.id-1] = 6
+	}
+	if (data.valve1PortsAvailable >= 5) {
+		state.valve1PortAssignments[data.valve1_outlet5_func.id-1] = 5
+	}
+	if (data.valve1PortsAvailable >= 4) {
+		state.valve1PortAssignments[data.valve1_outlet4_func.id-1] = 4
+	}
+	if (data.valve1PortsAvailable >= 3) {
+		state.valve1PortAssignments[data.valve1_outlet3_func.id-1] = 3
+	}
+	if (data.valve1PortsAvailable >= 2) {
+		state.valve1PortAssignments[data.valve1_outlet2_func.id-1] = 2
+	}
+	if (data.valve1PortsAvailable >= 1) {
+		state.valve1PortAssignments[data.valve1_outlet1_func.id-1] = 1
+	}
+	if (data.valve2PortsAvailable >= 6) {
+		state.valve2PortAssignments[data.valve2_outlet6_func.id-1] = 6
+	}
+	if (data.valve2PortsAvailable >= 5) {
+		state.valve2PortAssignments[data.valve2_outlet5_func.id-1] = 5
+	}
+	if (data.valve2PortsAvailable >= 4) {
+		state.valve2PortAssignments[data.valve2_outlet4_func.id-1] = 4
+	}
+	if (data.valve2PortsAvailable >= 3) {
+		state.valve2PortAssignments[data.valve2_outlet3_func.id-1] = 3
+	}
+	if (data.valve2PortsAvailable >= 2) {
+		state.valve2PortAssignments[data.valve2_outlet2_func.id-1] = 2
+	}
+	if (data.valve2PortsAvailable >= 1) {
+		state.valve2PortAssignments[data.valve2_outlet1_func.id-1] = 1
+	}
 }
 
 void deviceStatus(hubResponse)
 {
-
     def data = parseJson(hubResponse.split("payload:")[1])
 
     // Update light status
@@ -122,53 +167,68 @@ void deviceStatus(hubResponse)
         }
     }
     
+	state.valve1Status = []
+	state.valve2Status = []
     // Update valve status
     if (parent.dtvValve1Count >= 6) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet6) {
             getChildDevice("kohlerdtv:valve1_6").sendEvent(name: "valve", value: "open")
+			state.valve1Status[5] = true
         }
         else {
             getChildDevice("kohlerdtv:valve1_6").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[5] = false
         }
+		
     }
     if (parent.dtvValve1Count >= 5) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet5) {
             getChildDevice("kohlerdtv:valve1_5").sendEvent(name: "valve", value: "open")
+			state.valve1Status[4] = true
         }   
         else {
             getChildDevice("kohlerdtv:valve1_5").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[4] = false
         }        
     }    
     if (parent.dtvValve1Count >= 4) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet4) {
             getChildDevice("kohlerdtv:valve1_4").sendEvent(name: "valve", value: "open")
+			state.valve1Status[3] = true
         }
         else {
             getChildDevice("kohlerdtv:valve1_4").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[3] = false
         }        
     }  
     if (parent.dtvValve1Count >= 3) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet3) {
             getChildDevice("kohlerdtv:valve1_3").sendEvent(name: "valve", value: "open")
+			state.valve1Status[2] = true
         }
         else {
             getChildDevice("kohlerdtv:valve1_3").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[2] = false
         }        
     } 
     if (parent.dtvValve1Count >= 2) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet2) {
             getChildDevice("kohlerdtv:valve1_2").sendEvent(name: "valve", value: "open")
+			state.valve1Status[1] = true
         } 
         else {
             getChildDevice("kohlerdtv:valve1_2").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[1] = false
         }        
     } 
     if (parent.dtvValve1Count >= 1) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet1) {
             getChildDevice("kohlerdtv:valve1_1").sendEvent(name: "valve", value: "open")
+			state.valve1Status[0] = true
         } 
         else {
             getChildDevice("kohlerdtv:valve1_1").sendEvent(name: "valve", value: "closed")
+			state.valve1Status[0] = false
         }      
 		def valve1Device = getChildDevice("kohlerdtv:valve1")
 		valve1Device.sendEvent(name: "thermostatSetpoint", value: data.valve1Setpoint)
@@ -179,55 +239,68 @@ void deviceStatus(hubResponse)
     if (parent.dtvValve2Count >= 6) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet6) {
             getChildDevice("kohlerdtv:valve2_6").sendEvent(name: "valve", value: "open")
+			state.valve2Status[5] = true
         } 
         else {
             getChildDevice("kohlerdtv:valve2_6").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[5] = false
         }        
     }
     if (parent.dtvValve2Count >= 5) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet5) {
             getChildDevice("kohlerdtv:valve2_5").sendEvent(name: "valve", value: "open")
+			state.valve2Status[4] = true
         }      
         else {
             getChildDevice("kohlerdtv:valve2_5").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[4] = false
         }
     }    
     if (parent.dtvValve2Count >= 4) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet4) {
             getChildDevice("kohlerdtv:valve2_4").sendEvent(name: "valve", value: "open")
+			state.valve2Status[3] = true
         } 
         else {
             getChildDevice("kohlerdtv:valve2_4").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[3] = false
         }        
     }  
     if (parent.dtvValve2Count >= 3) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet3) {
             getChildDevice("kohlerdtv:valve2_3").sendEvent(name: "valve", value: "open")
+			state.valve2Status[2] = true
         }          
         else {
             getChildDevice("kohlerdtv:valve2_3").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[2] = false
         }
     } 
     if (parent.dtvValve2Count >= 2) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet2) {
             getChildDevice("kohlerdtv:valve2_2").sendEvent(name: "valve", value: "open")
+			state.valve2Status[1] = true
         }  
         else {
             getChildDevice("kohlerdtv:valve2_2").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[1] = false
         }        
     } 
     if (parent.dtvValve2Count >= 1) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet1) {
             getChildDevice("kohlerdtv:valve2_1").sendEvent(name: "valve", value: "open")
+			state.valve2Status[0] = true
         } 
         else {
             getChildDevice("kohlerdtv:valve2_1").sendEvent(name: "valve", value: "closed")
+			state.valve2Status[0] = false
         }
 		def valve2Device = getChildDevice("kohlerdtv:valve2")
 		valve2Device.sendEvent(name: "thermostatSetpoint", value: data.valve2Setpoint)
 		if (data.valve2Temp != null)
 			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
     }
+	log.debug "valve 1 status ${state.valve1Status}"
 }
 
 def sendCgiCommand(def name = "", def data = null, def handler = null)
@@ -250,4 +323,74 @@ def sendCgiCommand(def name = "", def data = null, def handler = null)
 }
 
 def dummyHandler(hubResponse) {
+}
+
+def handleOpen(device, id) {
+	def valve1Outputs = ""
+	def valve2Outputs = ""
+	def outputNumber = id.split("_")[1].toInteger()
+	if (id.startsWith("valve1_"))
+	{
+		log.debug "turning on ${outputNumber} -> ${state.valve1PortAssignments[outputNumber-1]}"
+		valve1Outputs = buildValveString(state.valve1Status, true, state.valve1PortAssignments[outputNumber-1])
+		valve2Outputs = buildValveString(state.valve2Status, false, 999)
+	}
+	else if (id.startsWith("valve2_"))
+	{
+		valve1Outputs = buildValveString(state.valve1Status, true, 999)
+		valve2Outputs = buildValveString(state.valve2Status, false, state.valve2PortAssignments[outputNumber-1])
+	}
+	def data = [
+		valve_num : 1,
+		valve1_outlet: valve1Outputs,
+		valve1_massage: 0,
+		valve1_temp: 100,
+		valve2_outlet: valve2Outputs,
+		valve2_massage: 0,
+		valve2_temp: 100
+	]
+	sendCgiCommand("quick_shower", data, null)
+}
+
+def handleClose(device, id) {
+	def valve1Outputs = ""
+	def valve2Outputs = ""
+	def outputNumber = id.split("_")[1].toInteger()
+	if (id.startsWith("valve1_"))
+	{
+		log.debug "turning off ${outputNumber} -> ${state.valve1PortAssignments[outputNumber-1]}"
+		valve1Outputs = buildValveString(state.valve1Status, false, state.valve1PortAssignments[outputNumber-1])
+		valve2Outputs = buildValveString(state.valve2Status, false, 999)
+	}
+	else if (id.startsWith("valve2_"))
+	{
+		valve1Outputs = buildValveString(state.valve1Status, false, 999)
+		valve2Outputs = buildValveString(state.valve2Status, false, state.valve2PortAssignments[outputNumber-1])
+	}
+	def data = [
+		valve_num : 1,
+		valve1_outlet: valve1Outputs,
+		valve1_massage: 0,
+		valve1_temp: 100,
+		valve2_outlet: valve2Outputs,
+		valve2_massage: 0,
+		valve2_temp: 100
+	]
+	sendCgiCommand("quick_shower", data, null)
+}
+
+def buildValveString(currentValveStates, open, newValve) {
+	def result = ""
+	for (def i = 0; i < currentValveStates.size(); i++) {
+		if (i+1 == newValve) {
+			if (open)
+				result += (i+1)
+		}
+		else {
+			if (currentValveStates[i] == true)
+				result += (i+1)
+		}
+	}
+	log.debug "valve string: ${result}"
+	return result
 }

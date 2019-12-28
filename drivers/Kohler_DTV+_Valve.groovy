@@ -12,9 +12,9 @@ metadata {
 }
 
 def open() {
-	//parent.handleOn(device, device.deviceNetworkId.split(":")[1])
+	parent.handleOpen(device, device.deviceNetworkId.split(":")[1])
 }
 
 def close() {
-	//parent.handleOff(device, device.deviceNetworkId.split(":")[1])
+	parent.handleClose(device, device.deviceNetworkId.split(":")[1])
 }
