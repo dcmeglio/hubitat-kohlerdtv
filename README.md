@@ -16,4 +16,4 @@ The Kohler DTV+ Integration app configures your shower. It will create the child
 To connect to the device you will need to specify the IP of your System Controller and specify the details about your lights and valves. If you have a Kohler Konnect module it can optionally use your Konnect credentials to automatically discover your system components.
 
 ## Limitations
-Currently the only commands that can be sent are to turn the shower on/off and start a preset. There is currently no way to manage individual valves or the lights, however their status is reported.
+Currently the only commands that can be sent are to turn the shower on/off and start a preset. There is currently no way to manage lights, music, or steam. Light status is reported however.

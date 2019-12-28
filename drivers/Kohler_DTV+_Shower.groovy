@@ -11,10 +11,10 @@ def on() {
 		valve_num : 1,
 		valve1_outlet: 1,
 		valve1_massage: 0,
-		valve1_temp: 100,
+		valve1_temp: getValveSetPoint(1),
 		valve2_outlet: 1,
 		valve2_massage: 0,
-		valve2_temp: 100
+		valve2_temp: getValveSetPoint(2)
 	]
 	sendCgiCommand("quick_shower", data, null)
 }
@@ -232,6 +232,7 @@ void deviceStatus(hubResponse)
         }      
 		def valve1Device = getChildDevice("kohlerdtv:valve1")
 		valve1Device.sendEvent(name: "thermostatSetpoint", value: data.valve1Setpoint)
+		valve1Device.sendEvent(name: "heatingSetpoint", value: data.valve1Setpoint)
 		if (data.valve1Temp != null)
 			valve1Device.sendEvent(name: "temperature", value: data.valve1Temp)
     } 
@@ -297,6 +298,7 @@ void deviceStatus(hubResponse)
         }
 		def valve2Device = getChildDevice("kohlerdtv:valve2")
 		valve2Device.sendEvent(name: "thermostatSetpoint", value: data.valve2Setpoint)
+		valve2Device.sendEvent(name: "heatingSetpoint", value: data.valve2Setpoint)
 		if (data.valve2Temp != null)
 			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
     }
@@ -346,10 +348,10 @@ def handleOpen(device, id) {
 		valve_num : 1,
 		valve1_outlet: valve1Outputs,
 		valve1_massage: 0,
-		valve1_temp: 100,
+		valve1_temp: getValveSetPoint(1),
 		valve2_outlet: valve2Outputs,
 		valve2_massage: 0,
-		valve2_temp: 100
+		valve2_temp: getValveSetPoint(2)
 	]
 	sendCgiCommand("quick_shower", data, null)
 }
@@ -375,10 +377,10 @@ def handleClose(device, id) {
 		valve_num : 1,
 		valve1_outlet: valve1Outputs,
 		valve1_massage: 0,
-		valve1_temp: 100,
+		valve1_temp: getValveSetPoint(1),
 		valve2_outlet: valve2Outputs,
 		valve2_massage: 0,
-		valve2_temp: 100
+		valve2_temp: getValveSetPoint(2)
 	]
 	sendCgiCommand("quick_shower", data, null)
 }
@@ -397,4 +399,36 @@ def buildValveString(currentValveStates, currentValveAssignments, open, newValve
 	}
 	log.debug "valve string: ${result}"
 	return result
+}
+
+def handleHeatingSetpoint(device, id, temperature) {
+	device.sendEvent(name: "thermostatSetpoint", value: temperature)
+	device.sendEvent(name: "heatingSetpoint", value: temperature)
+	if (currentValue("switch") == "on")
+	{
+		def valve1temp = getValveSetPoint(1)
+		def valve2temp = getValveSetPoint(2)
+		if (id.startsWith("valve1_"))
+			valve1temp = temperature
+		else if (id.startsWith("valve2_"))
+			valve2temp = temperature
+		def data = [
+			valve_num : 1,
+			valve1_outlet: buildValveString(state.valve1Status, state.valve1PortAssignments, false, null),
+			valve1_massage: 0,
+			valve1_temp: valve1temp,
+			valve2_outlet: buildValveString(state.valve2Status, state.valve2PortAssignments, false, null),
+			valve2_massage: 0,
+			valve2_temp: valve2temp
+		]
+		sendCgiCommand("quick_shower", data, null)
+	}
+}
+
+def getValveSetPoint(valve) {
+	def device = getChildDevice("kohlerdtv:valve${valve}")
+	if (device == null)
+		return 100
+	else
+		return device.currentValue("heatingSetpoint")
 }
