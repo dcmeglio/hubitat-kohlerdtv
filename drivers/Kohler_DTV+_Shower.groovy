@@ -1,15 +1,33 @@
 metadata {
     definition (name: "Kohler DTV+ Shower", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "Switch"
+		
+		command "startPreset", ["number"]
     }
 }
 
 def on() {
-	//parent.handleOn(device, device.deviceNetworkId.split(":")[1])
+	def data = [
+		valve_num : 1,
+		valve1_outlet: 1,
+		valve1_massage: 0,
+		valve1_temp: 100,
+		valve2_outlet: 1,
+		valve2_massage: 0,
+		valve2_temp: 100
+	]
+	sendCgiCommand("quick_shower", data, null)
 }
 
 def off() {
-	//parent.handleOff(device, device.deviceNetworkId.split(":")[1])
+	sendCgiCommand("stop_shower", null, null)
+}
+
+def startPreset(preset) {
+	def data = [
+		user: preset
+	]
+	sendCgiCommand("start_user", data, null)
 }
 
 def installed() {
@@ -31,7 +49,7 @@ def initialize() {
 
 def updateDevices()
 {
-    sendHubCommand(new hubitat.device.HubAction("GET /system_info.cgi HTTP/1.1\r\n\r\n", hubitat.device.Protocol.RAW_LAN, [destinationAddress: "${parent.dtvIP}:80", callback: deviceStatus]))
+	sendCgiCommand("system_info", null, deviceStatus)
 }
 
 void deviceStatus(hubResponse)
@@ -210,4 +228,26 @@ void deviceStatus(hubResponse)
 		if (data.valve2Temp != null)
 			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
     }
+}
+
+def sendCgiCommand(def name = "", def data = null, def handler = null)
+{
+	if (handler == null)
+		handler = dummyHandler
+	if (data != null) {
+		def queryString = ""
+		def keys = data.keySet()
+		for (def i = 0; i < keys.size(); i++) {
+			def queryKey = keys[i]
+			def queryValue = data[keys[i]]
+			queryString += "${queryKey}=${queryValue}&"
+		}
+		queryString = queryString.substring(0, queryString.size()-1)
+		sendHubCommand(new hubitat.device.HubAction("GET /${name}.cgi?${queryString} HTTP/1.1\r\n\r\n", hubitat.device.Protocol.RAW_LAN, [destinationAddress: "${parent.dtvIP}:80", callback: handler]))
+	}
+	else
+		sendHubCommand(new hubitat.device.HubAction("GET /${name}.cgi HTTP/1.1\r\n\r\n", hubitat.device.Protocol.RAW_LAN, [destinationAddress: "${parent.dtvIP}:80", callback: handler]))
+}
+
+def dummyHandler(hubResponse) {
 }
