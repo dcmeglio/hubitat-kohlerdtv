@@ -43,6 +43,7 @@ def prefKohlerDevices() {
 	if (dtvKonnect) {
 		authenticateKohlerKonnect()
 		getKonnectDevices()
+		testKonnect()
 		return dynamicPage(name: "Devices", title: "Kohler DTV+ Devices", nextPage: "prefKohlerKonnectDeviceInfo", install: false, uninstall: false) {
 			section("Device Information") {
 				input(name: "dtv", type: "enum", title: "Device", required:false, multiple:false, options:state.dtvDevices)
@@ -226,6 +227,7 @@ def authenticateKohlerKonnect() {
 		state.access_token_expiration = resp.data.expires_on
 		state.refresh_token = resp.data.refresh_token
 		state.refresh_token_not_before = 0
+		log.debug resp.data
 	}
 }
 
@@ -266,6 +268,24 @@ def getKonnectDevices() {
 				state.dtvDevices[device.id] = device.logicalname
 			}
 		}
+	}
+}
+
+def testKonnect() {
+	def token = getAccessToken()
+	def params = [
+		uri: "https://connect.kohler.io",
+		path: "/api/v1/platform/mobilesetting",
+		contentType: "application/json",
+		headers: [
+			"Authorization": "Bearer ${token}"
+		]
+	]
+	
+
+
+	httpGet(params) { resp ->
+		log.debug resp.data
 	}
 }
 

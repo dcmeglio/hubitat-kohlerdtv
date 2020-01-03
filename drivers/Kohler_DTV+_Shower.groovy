@@ -408,9 +408,9 @@ def handleHeatingSetpoint(device, id, temperature) {
 	{
 		def valve1temp = getValveSetPoint(1)
 		def valve2temp = getValveSetPoint(2)
-		if (id.startsWith("valve1_"))
+		if (id.startsWith("valve1"))
 			valve1temp = temperature
-		else if (id.startsWith("valve2_"))
+		else if (id.startsWith("valve2"))
 			valve2temp = temperature
 		def data = [
 			valve_num : 1,
