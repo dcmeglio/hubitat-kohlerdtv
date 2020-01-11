@@ -45,17 +45,22 @@ def updated() {
 def initialize() {
 	log.debug "initializing"
 	schedule("0/10 * * * * ? *", updateDevices)
+	schedule("* 0/5 * * * ? *", updateDeviceConfig)
 }
 
 def updateDevices()
 {
 	sendCgiCommand("system_info", null, deviceStatus)
+}
+
+def updateDeviceConfig()
+{
 	sendCgiCommand("values", null, deviceConfig)
 }
 
 def deviceConfig(hubResponse)
 {
-	def data = parseJson(hubResponse.split("payload:")[1])
+    def data = parseJsonFromBase64(parseLanMessage(hubResponse).payload)
 	state.valve1PortAssignments = []
 	state.valve2PortAssignments = []
 	data.valve1PortsAvailable = data.valve1PortsAvailable.toInteger()
@@ -100,7 +105,7 @@ def deviceConfig(hubResponse)
 
 void deviceStatus(hubResponse)
 {
-    def data = parseJson(hubResponse.split("payload:")[1])
+    def data = parseJsonFromBase64(parseLanMessage(hubResponse).payload)
 
     // Update light status
     if (data.ui_shower_on) {
