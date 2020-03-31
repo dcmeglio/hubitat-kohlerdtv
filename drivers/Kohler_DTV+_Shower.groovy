@@ -44,7 +44,7 @@ def updated() {
 
 def initialize() {
 	log.debug "initializing"
-	schedule("0/10 * * * * ? *", updateDevices)
+	schedule("5 5/30 * * * ? *", updateDeviceConfig)
 }
 
 def updateDevices()
@@ -65,59 +65,69 @@ void deviceStatus(hubResponse)
         sendEvent(name: "switch", value: "off")
     }
     if (parent.dtvLightCount >= 3) {
-        if (parent.dtvLightDimmable_3) {
+        def lightDevice = getChildDevice("kohlerdtv:light_3")
+        if (lightDevice.hasAttribute("level")) {
             if (data.LZ3Status != "Off") {
                 def level3 = data.LZ3Status.replace("%","").toInteger()
-                getChildDevice("kohlerdtv:light_3").sendEvent(name: "level", value: level3)
+                lightDevice.sendEvent(name: "level", value: level3)
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_3").sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
         else {
             if (data.LZ3Status == "On") {
-                getChildDevice("kohlerdtv:light_3").sendEvent(name: "switch", value: "on")
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_3").sendEvent(name: "switch", value: "off")
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
     }
     if (parent.dtvLightCount >= 2) {
-        if (parent.dtvLightDimmable_2) {
+        def lightDevice = getChildDevice("kohlerdtv:light_2")
+        if (lightDevice.hasAttribute("level")) {
             if (data.LZ2Status != "Off") {
                 def level2 = data.LZ2Status.replace("%","").toInteger()
-                getChildDevice("kohlerdtv:light_2").sendEvent(name: "level", value: level2)
+                lightDevice.sendEvent(name: "level", value: level2)
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_2").sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
         else {
             if (data.LZ2Status == "On") {
-                getChildDevice("kohlerdtv:light_2").sendEvent(name: "switch", value: "on")
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_2").sendEvent(name: "switch", value: "off")
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
     }
+    
     if (parent.dtvLightCount >= 1) {
-        if (parent.dtvLightDimmable_1) {
+        def lightDevice = getChildDevice("kohlerdtv:light_1")
+        if (lightDevice.hasAttribute("level")) {
             if (data.LZ1Status != "Off") {
                 def level1 = data.LZ1Status.replace("%","").toInteger()
-                getChildDevice("kohlerdtv:light_1").sendEvent(name: "level", value: level1)
+                lightDevice.sendEvent(name: "level", value: level1)
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_1").sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "level", value: 0)
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
         else {
             if (data.LZ1Status == "On") {
-                getChildDevice("kohlerdtv:light_1").sendEvent(name: "switch", value: "on")
+                lightDevice.sendEvent(name: "switch", value: "on")
             }
             else {
-                getChildDevice("kohlerdtv:light_1").sendEvent(name: "switch", value: "off")
+                lightDevice.sendEvent(name: "switch", value: "off")
             }
         }
     }
@@ -250,4 +260,125 @@ def sendCgiCommand(def name = "", def data = null, def handler = null)
 }
 
 def dummyHandler(hubResponse) {
+}
+
+def handleOpen(device, id) {
+	def valve1Outputs = ""
+	def valve2Outputs = ""
+	def outputNumber = id.split("_")[1].toInteger()
+	if (id.startsWith("valve1_"))
+	{
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, true, state.valve1PortAssignments[outputNumber-1])
+		state.valve1Status[outputNumber] = true
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, null)
+	}
+	else if (id.startsWith("valve2_"))
+	{
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, true, null)
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, state.valve2PortAssignments[outputNumber-1])
+		state.valve2Status[outputNumber] = true
+	}
+	def data = [
+		valve_num : 1,
+		valve1_outlet: valve1Outputs,
+		valve1_massage: 0,
+		valve1_temp: getValveSetPoint(1),
+		valve2_outlet: valve2Outputs,
+		valve2_massage: 0,
+		valve2_temp: getValveSetPoint(2)
+	]
+	sendCgiCommand("quick_shower", data, null)
+}
+
+def handleOn(device, id) {
+    def data = [
+        module: 1,
+        intensity: 100
+    ]
+    log.debug "ddd"
+    sendCgiCommand("light_on", data, null)
+}
+
+def handleOff(device, id) {
+    def data = [
+        module: 1
+    ]
+    sendCgiCommand("light_off", data, null)
+}
+
+def handleClose(device, id) {
+	def valve1Outputs = ""
+	def valve2Outputs = ""
+	def outputNumber = id.split("_")[1].toInteger()
+	if (id.startsWith("valve1_"))
+	{
+		log.debug "turning off ${outputNumber} -> ${state.valve1PortAssignments[outputNumber-1]}"
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, false, state.valve1PortAssignments[outputNumber-1])
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, null)
+		state.valve1Status[outputNumber] = false
+	}
+	else if (id.startsWith("valve2_"))
+	{
+		valve1Outputs = buildValveString(state.valve1Status, state.valve1PortAssignments, false, null)
+		valve2Outputs = buildValveString(state.valve2Status, state.valve2PortAssignments, false, state.valve2PortAssignments[outputNumber-1])
+		state.valve2Status[outputNumber] = false
+	}
+	def data = [
+		valve_num : 1,
+		valve1_outlet: valve1Outputs,
+		valve1_massage: 0,
+		valve1_temp: getValveSetPoint(1),
+		valve2_outlet: valve2Outputs,
+		valve2_massage: 0,
+		valve2_temp: getValveSetPoint(2)
+	]
+	sendCgiCommand("quick_shower", data, null)
+}
+
+def buildValveString(currentValveStates, currentValveAssignments, open, newValve) {
+	def result = ""
+	for (def i = 0; i < currentValveStates.size(); i++) {
+		if (i+1 == newValve) {
+			if (open)
+				result += (i+1)
+		}
+		else {
+			if (currentValveStates[i] == true)
+				result += currentValveAssignments[i]
+		}
+	}
+	log.debug "valve string: ${result}"
+	return result
+}
+
+def handleHeatingSetpoint(device, id, temperature) {
+	device.sendEvent(name: "thermostatSetpoint", value: temperature)
+	device.sendEvent(name: "heatingSetpoint", value: temperature)
+	if (currentValue("switch") == "on")
+	{
+		def valve1temp = getValveSetPoint(1)
+		def valve2temp = getValveSetPoint(2)
+		if (id.startsWith("valve1"))
+			valve1temp = temperature
+		else if (id.startsWith("valve2"))
+			valve2temp = temperature
+		def data = [
+			valve_num : 1,
+			valve1_outlet: buildValveString(state.valve1Status, state.valve1PortAssignments, false, null),
+			valve1_massage: 0,
+			valve1_temp: valve1temp,
+			valve2_outlet: buildValveString(state.valve2Status, state.valve2PortAssignments, false, null),
+			valve2_massage: 0,
+			valve2_temp: valve2temp
+		]
+		sendCgiCommand("quick_shower", data, null)
+	}
+}
+
+def getValveSetPoint(valve) {
+	def device = getChildDevice("kohlerdtv:valve${valve}")
+	if (device == null)
+		return 100
+	else
+		return device.currentValue("heatingSetpoint")
 }
