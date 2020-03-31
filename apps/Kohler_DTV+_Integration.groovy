@@ -82,6 +82,7 @@ def prefKohlerDeviceInfo() {
 
 def prefKohlerKonnectDeviceInfo() {
 	getKonnectDeviceDetails(dtv)
+	registerKonnectDevice()
 	
 	return dynamicPage(name: "prefKohlerKonnectDeviceInfo", title: "Device Information", install: true, uninstall: true) {
 		section("Valves") {
@@ -98,6 +99,33 @@ def prefKohlerKonnectDeviceInfo() {
             }
         }
 	}
+}
+
+def registerKonnectDevice() {
+	def deviceId = getHubUID().replaceAll("-","")
+	
+	def token = getAccessToken()
+	def body = '{"sku":"IOS","builddata":{"version":"1.7.4","type":"ios"},"serialnumber":"'+ deviceId + '"}'
+	def params = [
+		uri: "https://connect.kohler.io",
+		path: "/api/v1/platform/devices/identity/all/mobile",
+		contentType: "application/json",
+		requestContentType: "application/json",
+		headers: [
+			"Authorization": "Bearer ${token}"
+		],
+		body: body
+	]
+
+	httpPost(params) { resp ->
+		def iotprofile = resp.data.iotprofile
+		
+		state.deviceid = iotprofile.deviceid
+		state.tenantid = iotprofile.tenantid
+		state.hostname = iotprofile.hostname
+		state.primarykey = iotprofile.primarykey
+		state.sas = iotprofile.signature
+	}	
 }
 
 def cookiesFromJar(jar)
