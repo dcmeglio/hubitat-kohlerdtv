@@ -6,6 +6,8 @@
  *	If you find this useful, donations are always appreciated 
  *	https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7LBRPJRLJSDDN&source=url
  *
+ * Revision History
+ * v 2020.03.31 - Added the ability to control lights and amplifier using a Kohler Konnect module
  */
 definition(
     name: "Kohler DTV+ Integration",
