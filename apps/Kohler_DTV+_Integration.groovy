@@ -603,7 +603,7 @@ def cleanupSettings()
 
 def handleOn(device, id) {
 	if (dtvKonnect) {
-		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
 			code: "LIGHT_BRIDGE_CTRL",
 			light: getLightById(id),
 			brightness: "100",
@@ -617,7 +617,7 @@ def handleOn(device, id) {
 
 def handleOff(device, id) {
 	if (dtvKonnect) {
-		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
 			code: "LIGHT_BRIDGE_CTRL",
 			light: getLightById(id),
 			brightness: "0",
@@ -628,9 +628,20 @@ def handleOff(device, id) {
 		log.error "Lights are not supported without a Konnect bridge"
 }
 
+def handleSetVolume(device, id, volumelevel) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BR9RHTDJ", "control", "VOLUME_UP_DOWN_CTRL", [
+			code: "VOLUME_UP_DOWN_CTRL",
+			percentage: volumelevel.toString()
+		])
+	}
+	else
+		log.error "Volume is not supported without a Konnect bridge"
+}
+
 def handleSetLevel(device, id, level) {
 	if (dtvKonnect) {
-		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
 			code: "LIGHT_BRIDGE_CTRL",
 			light: getLightById(id),
 			brightness: level.toString(),
@@ -677,7 +688,7 @@ def renewSasIfNeeded() {
 	}
 }
 
-def mqttOverHttps(type, code, msgBody) {
+def mqttOverHttps(sysid, type, code, msgBody) {
 	renewSasIfNeeded()
 	def body = [
 		messageid: UUID.randomUUID().toString(),
@@ -696,7 +707,7 @@ def mqttOverHttps(type, code, msgBody) {
 		deviceid: dtv,
 		tenantid: state.tenantid,
 		ver: "1.0",
-		sysid: "DTV-BSNBBLPH",
+		sysid: sysid,
 		simulated: true,
 		durable: true
 	]

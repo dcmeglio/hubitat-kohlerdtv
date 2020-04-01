@@ -298,6 +298,12 @@ void deviceStatus(hubResponse)
 		if (data.valve2Temp != null)
 			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
     }
+	
+	def amplifier = getChildDevice("kohlerdtv:amplifier")
+	if (amplifier) {
+		def volume = data.volStatus.replace("%","").toInteger()
+		amplifier.sendEvent(name: "volume", value: volume)
+	}
 }
 
 def sendCgiCommand(def name = "", def data = null, def handler = null)
@@ -360,6 +366,10 @@ def handleOff(device, id) {
 
 def handleSetLevel(device, id, level) {
 	parent.handleSetLevel(device, id, level)
+}
+
+def handleSetVolume(device, id, volumelevel) {
+	parent.handleSetVolume(device, id, volumelevel)
 }
 
 def handleClose(device, id) {
