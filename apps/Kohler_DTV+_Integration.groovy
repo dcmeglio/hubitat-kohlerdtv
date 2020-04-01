@@ -638,7 +638,7 @@ def mqttOverHttps(type, code, msgBody) {
 		ttl:"3000",
 		sku:"DTV",
 		type:"CTL",
-		internalid:"33333333-65AA-42EC-A945-5FD21DEC0538",
+		internalid:UUID.randomUUID().toString(),
 		data: [
 			type: type,
 			attributes: [msgBody],
