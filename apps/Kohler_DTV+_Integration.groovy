@@ -646,6 +646,7 @@ def renewSasIfNeeded() {
 				logDebug "The SAS token has expired, renewing"
 				registerKonnectDevice()
 			}
+			break
 		}
 	}
 }
