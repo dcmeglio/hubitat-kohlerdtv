@@ -468,6 +468,9 @@ def cleanupChildDevices()
 			}
 		}
 		
+		if (dtvValve1Count == 0)
+			deleteChildDevice("kohlerdtv:valve1")
+		
 		if (dtvValve2Count < 6)
 		{
 			for (def i = 6; i > dtvValve2Count; i--)
@@ -478,6 +481,9 @@ def cleanupChildDevices()
 				}
 			}
 		}
+		
+		if (dtvValve2Count == 0)
+			deleteChildDevice("kohlerdtv:valve2")
 		
 		if (dtvLightCount < 3)
 		{
@@ -508,6 +514,9 @@ def cleanupKonnectChildDevices()
 			}
 		}
 		
+		if (konnectDtvValve1Count == 0)
+			deleteChildDevice("kohlerdtv:valve1")
+		
 		if (state.konnectDtvValve2Count < 6)
 		{
 			for (def i = 6; i > state.konnectDtvValve2Count; i--)
@@ -518,6 +527,9 @@ def cleanupKonnectChildDevices()
 				}
 			}
 		}
+		
+		if (konnectDtvValve2Count == 0)
+			deleteChildDevice("kohlerdtv:valve2")
 		
 		if (state.konnectDtvLightCount < 3)
 		{
