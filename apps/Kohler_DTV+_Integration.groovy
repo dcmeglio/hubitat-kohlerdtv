@@ -630,7 +630,28 @@ def logDebug(msg) {
 	}
 }
 
+def renewSasIfNeeded() {
+	def stripPrefix = state.sas.replaceAll("SharedAccessSignature ","")
+	def pairs = stripPrefix.split("&")
+	
+	for (kvp in pairs)
+	{
+		def keyAndValue = kvp.split("=")
+		if (keyAndValue[0] == "se")
+		{
+			def expirationDate = Integer.parseInt(keyAndValue[1])
+			def currentTime = now().intdiv(1000)
+			if (expirationDate < currentTime)
+			{
+				logDebug "The SAS token has expired, renewing"
+				registerKonnectDevice()
+			}
+		}
+	}
+}
+
 def mqttOverHttps(type, code, msgBody) {
+	renewSasIfNeeded()
 	def body = [
 		messageid: UUID.randomUUID().toString(),
 		protocol: "MQTT",
