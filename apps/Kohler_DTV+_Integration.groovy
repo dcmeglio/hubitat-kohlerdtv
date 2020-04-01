@@ -1,8 +1,13 @@
 /**
  *  Kohler DTV+ Integration
  *
- *  Copyright 2019 Dominick Meglio
+ *  Copyright 2019-2020 Dominick Meglio
  *
+ *	If you find this useful, donations are always appreciated 
+ *	https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7LBRPJRLJSDDN&source=url
+ *
+ * Revision History
+ * v 2020.03.31 - Added the ability to control lights and amplifier using a Kohler Konnect module
  */
 definition(
     name: "Kohler DTV+ Integration",
@@ -82,6 +87,7 @@ def prefKohlerDeviceInfo() {
 
 def prefKohlerKonnectDeviceInfo() {
 	getKonnectDeviceDetails(dtv)
+	registerKonnectDevice()
 	
 	return dynamicPage(name: "prefKohlerKonnectDeviceInfo", title: "Device Information", install: true, uninstall: true) {
 		section("Valves") {
@@ -98,6 +104,33 @@ def prefKohlerKonnectDeviceInfo() {
             }
         }
 	}
+}
+
+def registerKonnectDevice() {
+	def deviceId = getHubUID().replaceAll("-","")
+	
+	def token = getAccessToken()
+	def body = '{"sku":"IOS","builddata":{"version":"1.7.4","type":"ios"},"serialnumber":"'+ deviceId + '"}'
+	def params = [
+		uri: "https://connect.kohler.io",
+		path: "/api/v1/platform/devices/identity/all/mobile",
+		contentType: "application/json",
+		requestContentType: "application/json",
+		headers: [
+			"Authorization": "Bearer ${token}"
+		],
+		body: body
+	]
+
+	httpPost(params) { resp ->
+		def iotprofile = resp.data.iotprofile
+		
+		state.deviceid = iotprofile.deviceid
+		state.tenantid = iotprofile.tenantid
+		state.hostname = iotprofile.hostname
+		state.primarykey = iotprofile.primarykey
+		state.sas = iotprofile.signature
+	}	
 }
 
 def cookiesFromJar(jar)
@@ -306,6 +339,11 @@ def getKonnectDeviceDetails(deviceId) {
 			state.konnectDtvLight3Dimmable = true
 		else
 			state.konnectDtvLight3Dimmable = false
+			
+		if (resp.data.config.parts.amplifier == "Connected")
+			state.konnectHasMusic = true
+		else
+			state.konnectHasMusic = false
 	}
 }
 
@@ -408,16 +446,22 @@ def createKonnectChildDevices() {
         }
     }
 	
-	if (dtvValve1Count > 0)
+	if (state.konnectDtvValve1Count > 0)
 	{
 		if (!showerDevice.getChildDevice("kohlerdtv:valve1"))
 			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve1", ["name": "Valve 1", isComponent: true])
 	}
 	
-	if (dtvValve2Count > 0)
+	if (state.konnectDtvValve2Count > 0)
 	{
 		if (!showerDevice.getChildDevice("kohlerdtv:valve2"))
 			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve2", ["name": "Valve 2", isComponent: true])
+	}
+	
+	if (state.konnectHasMusic) 
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:amplifier"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Amplifier", "kohlerdtv:amplifier", ["name": "Amplifier", isComponent: true])
 	}
 }
 
@@ -437,6 +481,9 @@ def cleanupChildDevices()
 			}
 		}
 		
+		if (dtvValve1Count == 0)
+			deleteChildDevice("kohlerdtv:valve1")
+		
 		if (dtvValve2Count < 6)
 		{
 			for (def i = 6; i > dtvValve2Count; i--)
@@ -447,6 +494,9 @@ def cleanupChildDevices()
 				}
 			}
 		}
+		
+		if (dtvValve2Count == 0)
+			deleteChildDevice("kohlerdtv:valve2")
 		
 		if (dtvLightCount < 3)
 		{
@@ -477,6 +527,9 @@ def cleanupKonnectChildDevices()
 			}
 		}
 		
+		if (konnectDtvValve1Count == 0)
+			deleteChildDevice("kohlerdtv:valve1")
+		
 		if (state.konnectDtvValve2Count < 6)
 		{
 			for (def i = 6; i > state.konnectDtvValve2Count; i--)
@@ -488,6 +541,9 @@ def cleanupKonnectChildDevices()
 			}
 		}
 		
+		if (konnectDtvValve2Count == 0)
+			deleteChildDevice("kohlerdtv:valve2")
+		
 		if (state.konnectDtvLightCount < 3)
 		{
 			for (def i = 3; i > state.konnectDtvLightCount; i--)
@@ -498,6 +554,9 @@ def cleanupKonnectChildDevices()
 				}
 			}
 		}
+		
+		if (!state.konnectHasMusic)
+			deleteChildDevice("kohlerdtv:amplifier")
 	}
 }
 
@@ -544,8 +603,146 @@ def cleanupSettings()
 	}
 }
 
+def handleOn(device, id) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: "100",
+			status: "On"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
+
+}
+
+def handleOff(device, id) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: "0",
+			status: "Off"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
+}
+
+def handleSetVolume(device, id, volumelevel) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BR9RHTDJ", "control", "VOLUME_UP_DOWN_CTRL", [
+			code: "VOLUME_UP_DOWN_CTRL",
+			percentage: volumelevel.toString()
+		])
+	}
+	else
+		log.error "Volume is not supported without a Konnect bridge"
+}
+
+def handleSetInput(device, id, input) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BQXWX8DL", "control", "SELECT_AUDIO_SOURCE_CTRL", [
+			code: "SELECT_AUDIO_SOURCE_CTRL",
+			source: input
+		])
+	}
+	else
+		log.error "Audio input is not supported without a Konnect bridge"
+}
+
+def handleSetLevel(device, id, level) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: level.toString(),
+			status: "On"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
+}
+
+def getLightById(id) {
+	if (id.startsWith("light_1"))
+		return "1"
+	else if (id.startsWith("light_2"))
+		return "2"
+	else if (id.startsWith("light_3"))
+		return "3"
+}
+
 def logDebug(msg) {
     if (settings?.debugOutput) {
 		log.debug msg
 	}
+}
+
+def renewSasIfNeeded() {
+	def stripPrefix = state.sas.replaceAll("SharedAccessSignature ","")
+	def pairs = stripPrefix.split("&")
+	
+	for (kvp in pairs)
+	{
+		def keyAndValue = kvp.split("=")
+		if (keyAndValue[0] == "se")
+		{
+			def expirationDate = Integer.parseInt(keyAndValue[1])
+			def currentTime = now().intdiv(1000)
+			if (expirationDate < currentTime)
+			{
+				logDebug "The SAS token has expired, renewing"
+				registerKonnectDevice()
+			}
+			break
+		}
+	}
+}
+
+def mqttOverHttps(sysid, type, code, msgBody) {
+	renewSasIfNeeded()
+	def body = [
+		messageid: UUID.randomUUID().toString(),
+		protocol: "MQTT",
+		timestamp:now().intdiv(1000),
+		ttl:"3000",
+		sku:"DTV",
+		type:"CTL",
+		internalid:UUID.randomUUID().toString(),
+		data: [
+			type: type,
+			attributes: [msgBody],
+			code: code
+		],
+
+		deviceid: dtv,
+		tenantid: state.tenantid,
+		ver: "1.0",
+		sysid: sysid,
+		simulated: true,
+		durable: true
+	]
+	
+	def params = [
+		uri: "https://" + state.hostname,
+		path: "/devices/" + state.deviceid + "/messages/events",
+		query: [ "api-version": "2016-11-14"],
+		contentType: "text/plain",
+		requestContentType: "text/plain",
+		headers: [
+			"Authorization": state.sas,
+			"Host": state.hostname
+		],
+		body: groovy.json.JsonOutput.toJson(body)
+    ]
+	def result = false
+	httpPost(params) { resp ->
+		if (resp.status == 204)
+            result = true
+        else
+            result = false
+	}
+    return result
 }
