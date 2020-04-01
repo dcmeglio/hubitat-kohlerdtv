@@ -552,6 +552,9 @@ def cleanupKonnectChildDevices()
 				}
 			}
 		}
+		
+		if (!state.konnectHasMusic)
+			deleteChildDevice("kohlerdtv:amplifier")
 	}
 }
 
