@@ -337,6 +337,11 @@ def getKonnectDeviceDetails(deviceId) {
 			state.konnectDtvLight3Dimmable = true
 		else
 			state.konnectDtvLight3Dimmable = false
+			
+		if (resp.data.config.parts.amplifier == "Connected")
+			state.konnectHasMusic = true
+		else
+			state.konnectHasMusic = false
 	}
 }
 
@@ -439,16 +444,22 @@ def createKonnectChildDevices() {
         }
     }
 	
-	if (dtvValve1Count > 0)
+	if (state.konnectDtvValve1Count > 0)
 	{
 		if (!showerDevice.getChildDevice("kohlerdtv:valve1"))
 			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve1", ["name": "Valve 1", isComponent: true])
 	}
 	
-	if (dtvValve2Count > 0)
+	if (state.konnectDtvValve2Count > 0)
 	{
 		if (!showerDevice.getChildDevice("kohlerdtv:valve2"))
 			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve Controller", "kohlerdtv:valve2", ["name": "Valve 2", isComponent: true])
+	}
+	
+	if (state.konnectHasMusic) 
+	{
+		if (!showerDevice.getChildDevice("kohlerdtv:amplifier"))
+			showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Amplifier", "kohlerdtv:amplifier", ["name": "Amplifier", isComponent: true])
 	}
 }
 
