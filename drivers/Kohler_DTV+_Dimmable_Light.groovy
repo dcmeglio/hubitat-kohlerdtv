@@ -8,9 +8,19 @@
 metadata {
     definition (name: "Kohler DTV+ Dimmable Light", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "SwitchLevel"
+		capability "Switch"
+		capability "Light"
     }
 }
 
 def setLevel(level, duration) {
-	//parent.handleOff(device, device.deviceNetworkId.split(":")[1])
+	parent.handleSetLevel(device, device.deviceNetworkId.split(":")[1], level)
+}
+
+def off() {
+	parent.handleOff(device, device.deviceNetworkId.split(":")[1])
+}
+
+def on() {
+	parent.handleOn(device, device.deviceNetworkId.split(":")[1])
 }

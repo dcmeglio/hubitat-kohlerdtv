@@ -8,13 +8,14 @@
 metadata {
     definition (name: "Kohler DTV+ Light", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "Light"
+		capability "Switch"
     }
 }
 
 def off() {
-	//parent.handleOff(device, device.deviceNetworkId.split(":")[1])
+	parent.handleOff(device, device.deviceNetworkId.split(":")[1])
 }
 
 def on() {
-	//parent.handleOn(device, device.deviceNetworkId.split(":")[1])
+	parent.handleOn(device, device.deviceNetworkId.split(":")[1])
 }

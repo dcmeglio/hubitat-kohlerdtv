@@ -572,8 +572,82 @@ def cleanupSettings()
 	}
 }
 
+def handleOn(device, id) {
+	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: "1",
+		brightness: "100",
+		status: "On"
+	])
+
+}
+
+def handleOff(device, id) {
+	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: "1",
+		brightness: "0",
+		status: "Off"
+	])
+}
+
+def handleSetLevel(device, id, level) {
+	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: "1",
+		brightness: level.toString(),
+		status: "On"
+	])
+}
+
 def logDebug(msg) {
     if (settings?.debugOutput) {
 		log.debug msg
 	}
+}
+
+def mqttOverHttps(type, code, msgBody) {
+	def body = [
+		messageid: UUID.randomUUID().toString(),
+		protocol: "MQTT",
+		timestamp:now().intdiv(1000),
+		ttl:"3000",
+		sku:"DTV",
+		type:"CTL",
+		internalid:"33333333-65AA-42EC-A945-5FD21DEC0538",
+		data: [
+			type: type,
+			attributes: [msgBody],
+			code: code
+		],
+
+		deviceid: dtv,
+		tenantid: state.tenantid,
+		ver: "1.0",
+		sysid: "DTV-BSNBBLPH",
+		simulated: true,
+		durable: true
+	]
+	
+	def params = [
+		uri: "https://" + state.hostname,
+		path: "/devices/" + state.deviceid + "/messages/events",
+		query: [ "api-version": "2016-11-14"],
+		contentType: "text/plain",
+		requestContentType: "text/plain",
+		headers: [
+			"Authorization": state.sas,
+			"Host": state.hostname
+		],
+		body: groovy.json.JsonOutput.toJson(body)
+    ]
+	def result = false
+	httpPost(params) { resp ->
+		if (resp.status == 204)
+            result = true
+        else
+            result = false
+	}
+    return result
+
 }

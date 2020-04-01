@@ -44,6 +44,7 @@ def updated() {
 
 def initialize() {
 	log.debug "initializing"
+	schedule("0/10 * * * * ? *", updateDevices)
 	schedule("5 5/30 * * * ? *", updateDeviceConfig)
 }
 
@@ -52,10 +53,59 @@ def updateDevices()
 	sendCgiCommand("system_info", null, deviceStatus)
 }
 
+def updateDeviceConfig()
+{
+	sendCgiCommand("values", null, deviceConfig)
+}
+
+def deviceConfig(hubResponse)
+{
+    def data = parseJsonFromBase64(parseLanMessage(hubResponse).payload)
+	state.valve1PortAssignments = []
+	state.valve2PortAssignments = []
+	data.valve1PortsAvailable = data.valve1PortsAvailable.toInteger()
+	data.valve2PortsAvailable = data.valve2PortsAvailable.toInteger()
+	if (data.valve1PortsAvailable >= 6) {
+		state.valve1PortAssignments[data.valve1_outlet6_func.id-1] = 6
+	}
+	if (data.valve1PortsAvailable >= 5) {
+		state.valve1PortAssignments[data.valve1_outlet5_func.id-1] = 5
+	}
+	if (data.valve1PortsAvailable >= 4) {
+		state.valve1PortAssignments[data.valve1_outlet4_func.id-1] = 4
+	}
+	if (data.valve1PortsAvailable >= 3) {
+		state.valve1PortAssignments[data.valve1_outlet3_func.id-1] = 3
+	}
+	if (data.valve1PortsAvailable >= 2) {
+		state.valve1PortAssignments[data.valve1_outlet2_func.id-1] = 2
+	}
+	if (data.valve1PortsAvailable >= 1) {
+		state.valve1PortAssignments[data.valve1_outlet1_func.id-1] = 1
+	}
+	if (data.valve2PortsAvailable >= 6) {
+		state.valve2PortAssignments[data.valve2_outlet6_func.id-1] = 6
+	}
+	if (data.valve2PortsAvailable >= 5) {
+		state.valve2PortAssignments[data.valve2_outlet5_func.id-1] = 5
+	}
+	if (data.valve2PortsAvailable >= 4) {
+		state.valve2PortAssignments[data.valve2_outlet4_func.id-1] = 4
+	}
+	if (data.valve2PortsAvailable >= 3) {
+		state.valve2PortAssignments[data.valve2_outlet3_func.id-1] = 3
+	}
+	if (data.valve2PortsAvailable >= 2) {
+		state.valve2PortAssignments[data.valve2_outlet2_func.id-1] = 2
+	}
+	if (data.valve2PortsAvailable >= 1) {
+		state.valve2PortAssignments[data.valve2_outlet1_func.id-1] = 1
+	}
+}
+
 void deviceStatus(hubResponse)
 {
-
-    def data = parseJson(hubResponse.split("payload:")[1])
+    def data = parseJsonFromBase64(parseLanMessage(hubResponse).payload)
 
     // Update light status
     if (data.ui_shower_on) {
@@ -291,19 +341,15 @@ def handleOpen(device, id) {
 }
 
 def handleOn(device, id) {
-    def data = [
-        module: 1,
-        intensity: 100
-    ]
-    log.debug "ddd"
-    sendCgiCommand("light_on", data, null)
+	parent.handleOn(device, id)
 }
 
 def handleOff(device, id) {
-    def data = [
-        module: 1
-    ]
-    sendCgiCommand("light_off", data, null)
+    parent.handleOff(device, id)
+}
+
+def handleSetLevel(device, id, level) {
+	parent.handleSetLevel(device, id, level)
 }
 
 def handleClose(device, id) {
