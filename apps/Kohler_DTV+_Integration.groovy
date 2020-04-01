@@ -576,31 +576,52 @@ def cleanupSettings()
 }
 
 def handleOn(device, id) {
-	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
-		code: "LIGHT_BRIDGE_CTRL",
-		light: "1",
-		brightness: "100",
-		status: "On"
-	])
+	if (dtvKonnect) {
+		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: "100",
+			status: "On"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
 
 }
 
 def handleOff(device, id) {
-	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
-		code: "LIGHT_BRIDGE_CTRL",
-		light: "1",
-		brightness: "0",
-		status: "Off"
-	])
+	if (dtvKonnect) {
+		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: "0",
+			status: "Off"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
 }
 
 def handleSetLevel(device, id, level) {
-	mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
-		code: "LIGHT_BRIDGE_CTRL",
-		light: "1",
-		brightness: level.toString(),
-		status: "On"
-	])
+	if (dtvKonnect) {
+		mqttOverHttps("control", "LIGHT_BRIDGE_CTRL", [
+			code: "LIGHT_BRIDGE_CTRL",
+			light: getLightById(id),
+			brightness: level.toString(),
+			status: "On"
+		])
+	}
+	else
+		log.error "Lights are not supported without a Konnect bridge"
+}
+
+def getLightById(id) {
+	if (id.startsWith("light_1"))
+		return "1"
+	else if (id.startsWith("light_2"))
+		return "2"
+	else if (id.startsWith("light_3"))
+		return "3"
 }
 
 def logDebug(msg) {
@@ -652,5 +673,4 @@ def mqttOverHttps(type, code, msgBody) {
             result = false
 	}
     return result
-
 }
