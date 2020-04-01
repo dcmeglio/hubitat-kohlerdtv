@@ -303,6 +303,10 @@ void deviceStatus(hubResponse)
 	if (amplifier) {
 		def volume = data.volStatus.replace("%","").toInteger()
 		amplifier.sendEvent(name: "volume", value: volume)
+		if (volume > 0)
+			amplifier.sendEvent(name: "mute", value: "unmuted")
+		else
+			amplifier.sendEvent(name: "mute", value: "muted")
 	}
 }
 

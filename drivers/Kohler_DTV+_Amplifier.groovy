@@ -15,7 +15,8 @@ metadata {
 }
 
 def mute() {
-	// TODO
+	state.previousVolume = device.currentValue("volume")
+	setVolume(0)
 }
 
 def setVolume(volumelevel) {
@@ -23,7 +24,8 @@ def setVolume(volumelevel) {
 }
 
 def unmute() {
-	// TODO
+	if (device.currentValue("volume") == 0)
+		setVolume(state.previousVolume)
 }
 
 def volumeDown() {
