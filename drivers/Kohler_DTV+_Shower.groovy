@@ -376,6 +376,10 @@ def handleSetVolume(device, id, volumelevel) {
 	parent.handleSetVolume(device, id, volumelevel)
 }
 
+def handleSetInput(device, id, input) {
+	parent.handleSetInput(device, id, input)
+}
+
 def handleClose(device, id) {
 	def valve1Outputs = ""
 	def valve2Outputs = ""

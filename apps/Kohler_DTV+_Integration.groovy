@@ -639,6 +639,17 @@ def handleSetVolume(device, id, volumelevel) {
 		log.error "Volume is not supported without a Konnect bridge"
 }
 
+def handleSetInput(device, id, input) {
+	if (dtvKonnect) {
+		mqttOverHttps("DTV-BQXWX8DL", "control", "SELECT_AUDIO_SOURCE_CTRL", [
+			code: "SELECT_AUDIO_SOURCE_CTRL",
+			source: input
+		])
+	}
+	else
+		log.error "Audio input is not supported without a Konnect bridge"
+}
+
 def handleSetLevel(device, id, level) {
 	if (dtvKonnect) {
 		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [

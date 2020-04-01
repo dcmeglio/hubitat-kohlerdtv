@@ -11,6 +11,8 @@
 metadata {
     definition (name: "Kohler DTV+ Amplifier", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "AudioVolume"
+		
+		command "setInput", [[name:"Input*","type":"ENUM","description":"Input","constraints":["AUX1", "AUX2", "Bluetooth"]]]
     }
 }
 
@@ -21,6 +23,10 @@ def mute() {
 
 def setVolume(volumelevel) {
 	parent.handleSetVolume(device, device.deviceNetworkId.split(":")[1], volumelevel)
+}
+
+def setInput(input) {
+	parent.handleSetInput(device, device.deviceNetworkId.split(":")[1], input)
 }
 
 def unmute() {
