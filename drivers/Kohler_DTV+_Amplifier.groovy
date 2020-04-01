@@ -27,9 +27,19 @@ def unmute() {
 }
 
 def volumeDown() {
-	// TODO
+	if (device.currentValue("volume") == 0)
+		return
+	else if (device.currentValue("volume") < 5)
+		setVolume(0)
+	else
+		setVolume(device.currentValue("volume")-5)
 }
 
 def volumeUp() {
-	// TODO
+	if (device.currentValue("volume") == 100)
+		return
+	else if (device.currentValue("volume") > 95)
+		setVolume(100)
+	else
+		setVolume(device.currentValue("volume")+5)
 }
