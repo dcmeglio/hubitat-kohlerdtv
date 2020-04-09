@@ -1,0 +1,60 @@
+{
+	"packageName": "Kohler DTV+ Integration",
+	"minimumHEVersion": "2.1.9",
+	"author": "Dominick Meglio",
+	"version": "1.0.0",
+	"dateReleased": "2020-04-09",
+	"apps" : [
+		{
+			"id" : "2fa94483-78c2-44da-96e6-b35fd9972344",
+			"name": "Kohler DTV+ Integration",
+			"namespace": "dcm.kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/apps/Kohler_DTV%2B_Integration.groovy",
+			"required": true
+		}
+	],
+	"drivers": [
+		{
+			"id" : "a6ee985e-1755-472a-ae6b-b4ee0ef73b94",
+			"name": "Kohler_DTV+_Amplifier",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Amplifier.groovy",
+			"required": true
+		},
+		{
+			"id" : "362aadb5-e5ae-45a9-866e-450d1f9e8e13",
+			"name": "Kohler_DTV+_Dimmable_Light",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Dimmable_Light.groovy",
+			"required": true
+		},
+		{
+			"id" : "1120c250-9474-455f-a575-2f01b16e4b02",
+			"name": "Kohler_DTV+_Light",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Light.groovy",
+			"required": true
+		},
+		{
+			"id" : "b83001a6-1a1d-4c22-9481-be6200c14710",
+			"name": "Kohler_DTV+_Shower",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Shower.groovy",
+			"required": true
+		},
+		{
+			"id" : "10a43828-4dfe-4df1-8bcd-a7005eb60451",
+			"name": "Kohler_DTV+_Valve",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Valve.groovy",
+			"required": true
+		},
+		{
+			"id" : "50989c6d-b6c1-4dff-9fff-f845b758ac59",
+			"name": "Kohler_DTV+_Valve_Controller",
+			"namespace": "kohlerdtv",
+			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/drivers/Kohler_DTV%2B_Valve_Controller.groovy",
+			"required": true
+		}
+	]
+}
