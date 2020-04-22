@@ -2,8 +2,9 @@
 	"packageName": "Kohler DTV+ Integration",
 	"minimumHEVersion": "2.1.9",
 	"author": "Dominick Meglio",
-	"version": "1.0.0",
-	"dateReleased": "2020-04-09",
+	"version": "1.0.1",
+	"dateReleased": "2020-04-22",
+	"documentationLink": "https://github.com/dcmeglio/hubitat-kohlerdtv/blob/master/README.md",
 	"apps" : [
 		{
 			"id" : "2fa94483-78c2-44da-96e6-b35fd9972344",
