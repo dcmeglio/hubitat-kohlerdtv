@@ -256,10 +256,10 @@ void deviceStatus(hubResponse)
 			state.valve1Status[0] = false
         }      
 		def valve1Device = getChildDevice("kohlerdtv:valve1")
-		valve1Device.sendEvent(name: "thermostatSetpoint", value: data.valve1Setpoint)
-		valve1Device.sendEvent(name: "heatingSetpoint", value: data.valve1Setpoint)
+		valve1Device.sendEvent(name: "thermostatSetpoint", value: data.valve1Setpoint, unit: "F")
+		valve1Device.sendEvent(name: "heatingSetpoint", value: data.valve1Setpoint, unit: "F")
 		if (data.valve1Temp != null)
-			valve1Device.sendEvent(name: "temperature", value: data.valve1Temp)
+			valve1Device.sendEvent(name: "temperature", value: data.valve1Temp, unit: "F")
     } 
     
     if (parent.dtvValve2Count >= 6) {
@@ -322,10 +322,10 @@ void deviceStatus(hubResponse)
 			state.valve2Status[0] = false
         }
 		def valve2Device = getChildDevice("kohlerdtv:valve2")
-		valve2Device.sendEvent(name: "thermostatSetpoint", value: data.valve2Setpoint)
-		valve2Device.sendEvent(name: "heatingSetpoint", value: data.valve2Setpoint)
+		valve2Device.sendEvent(name: "thermostatSetpoint", value: data.valve2Setpoint, unit: "F")
+		valve2Device.sendEvent(name: "heatingSetpoint", value: data.valve2Setpoint, unit: "F")
 		if (data.valve2Temp != null)
-			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp)
+			valve2Device.sendEvent(name: "temperature", value: data.valve2Temp, unit: "F")
     }
 	
 	def amplifier = getChildDevice("kohlerdtv:amplifier")

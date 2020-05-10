@@ -12,9 +12,29 @@ metadata {
     definition (name: "Kohler DTV+ Valve Controller", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "TemperatureMeasurement"
 		capability "ThermostatSetpoint"
+		capability "Thermostat"
+		capability "Sensor"
+		capability "Configuration"
+		capability "ThermostatHeatingSetpoint"
+		capability "ThermostatOperatingState"
+		capability "ThermostatMode"
     }
+}
+
+def installed() {
+	initialize()
 }
 
 def setHeatingSetpoint(temperature) {
     parent.handleHeatingSetpoint(device, device.deviceNetworkId.split(":")[1], temperature)
+}
+
+def initialize() {
+	sendEvent(name: "supportedThermostatModes", value: ["auto"])
+	sendEvent(name: "supportedThermostatFanModes", value: [])
+	sendEvent(name: "thermostatMode", value: "auto")
+}
+
+def configure() {
+	initialize()
 }
