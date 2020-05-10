@@ -2,8 +2,8 @@
 	"packageName": "Kohler DTV+ Integration",
 	"minimumHEVersion": "2.1.9",
 	"author": "Dominick Meglio",
-	"version": "1.0.2",
-	"dateReleased": "2020-04-22",
+	"version": "1.0.3",
+	"dateReleased": "2020-05-10",
 	"releaseNotes": "Fixed thermostat display issues on the dashboard.",
 	"documentationLink": "https://github.com/dcmeglio/hubitat-kohlerdtv/blob/master/README.md",
 	"apps" : [

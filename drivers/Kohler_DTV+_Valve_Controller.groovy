@@ -30,9 +30,9 @@ def setHeatingSetpoint(temperature) {
 }
 
 def initialize() {
-	sendEvent(name: "supportedThermostatModes", value: ["auto"])
+	sendEvent(name: "supportedThermostatModes", value: ["heat"])
 	sendEvent(name: "supportedThermostatFanModes", value: [])
-	sendEvent(name: "thermostatMode", value: "auto")
+	sendEvent(name: "thermostatMode", value: "heat")
 }
 
 def configure() {
