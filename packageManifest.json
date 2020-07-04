@@ -12,7 +12,8 @@
 			"name": "Kohler DTV+ Integration",
 			"namespace": "dcm.kohlerdtv",
 			"location": "https://raw.githubusercontent.com/dcmeglio/hubitat-kohlerdtv/master/apps/Kohler_DTV%2B_Integration.groovy",
-			"required": true
+			"required": true,
+			"primary": true
 		}
 	],
 	"drivers": [
