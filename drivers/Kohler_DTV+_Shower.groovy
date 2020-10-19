@@ -124,7 +124,7 @@ void deviceStatus(hubResponse)
     else {
         sendEvent(name: "switch", value: "off")
     }
-    if (parent.dtvLightCount >= 3) {
+    if (parent.getLightCount() >= 3) {
         def lightDevice = getChildDevice("kohlerdtv:light_3")
         if (lightDevice.hasAttribute("level")) {
             if (data.LZ3Status != "Off") {
@@ -146,7 +146,7 @@ void deviceStatus(hubResponse)
             }
         }
     }
-    if (parent.dtvLightCount >= 2) {
+    if (parent.getLightCount() >= 2) {
         def lightDevice = getChildDevice("kohlerdtv:light_2")
         if (lightDevice.hasAttribute("level")) {
             if (data.LZ2Status != "Off") {
@@ -169,7 +169,7 @@ void deviceStatus(hubResponse)
         }
     }
     
-    if (parent.dtvLightCount >= 1) {
+    if (parent.getLightCount() >= 1) {
         def lightDevice = getChildDevice("kohlerdtv:light_1")
         if (lightDevice.hasAttribute("level")) {
             if (data.LZ1Status != "Off") {
@@ -195,7 +195,7 @@ void deviceStatus(hubResponse)
     state.valve1Status = []
 	state.valve2Status = []
     // Update valve status
-    if (parent.dtvValve1Count >= 6) {
+    if (parent.getValve1Count() >= 6) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet6) {
             getChildDevice("kohlerdtv:valve1_6").sendEvent(name: "valve", value: "open")
 			state.valve1Status[5] = true
@@ -206,7 +206,7 @@ void deviceStatus(hubResponse)
         }
 		
     }
-    if (parent.dtvValve1Count >= 5) {
+    if (parent.getValve1Count() >= 5) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet5) {
             getChildDevice("kohlerdtv:valve1_5").sendEvent(name: "valve", value: "open")
 			state.valve1Status[4] = true
@@ -216,7 +216,7 @@ void deviceStatus(hubResponse)
 			state.valve1Status[4] = false
         }        
     }    
-    if (parent.dtvValve1Count >= 4) {
+    if (parent.getValve1Count() >= 4) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet4) {
             getChildDevice("kohlerdtv:valve1_4").sendEvent(name: "valve", value: "open")
 			state.valve1Status[3] = true
@@ -226,7 +226,7 @@ void deviceStatus(hubResponse)
 			state.valve1Status[3] = false
         }        
     }  
-    if (parent.dtvValve1Count >= 3) {
+    if (parent.getValve1Count() >= 3) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet3) {
             getChildDevice("kohlerdtv:valve1_3").sendEvent(name: "valve", value: "open")
 			state.valve1Status[2] = true
@@ -236,7 +236,7 @@ void deviceStatus(hubResponse)
 			state.valve1Status[2] = false
         }        
     } 
-    if (parent.dtvValve1Count >= 2) {
+    if (parent.getValve1Count() >= 2) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet2) {
             getChildDevice("kohlerdtv:valve1_2").sendEvent(name: "valve", value: "open")
 			state.valve1Status[1] = true
@@ -246,7 +246,7 @@ void deviceStatus(hubResponse)
 			state.valve1Status[1] = false
         }        
     } 
-    if (parent.dtvValve1Count >= 1) {
+    if (parent.getValve1Count() >= 1) {
         if (data.valve1_Currentstatus == "On" && data.valve1outlet1) {
             getChildDevice("kohlerdtv:valve1_1").sendEvent(name: "valve", value: "open")
 			state.valve1Status[0] = true
@@ -262,7 +262,7 @@ void deviceStatus(hubResponse)
 			valve1Device.sendEvent(name: "temperature", value: data.valve1Temp, unit: "F")
     } 
     
-    if (parent.dtvValve2Count >= 6) {
+    if (parent.getValve2Count() >= 6) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet6) {
             getChildDevice("kohlerdtv:valve2_6").sendEvent(name: "valve", value: "open")
 			state.valve2Status[5] = true
@@ -272,7 +272,7 @@ void deviceStatus(hubResponse)
 			state.valve2Status[5] = false
         }        
     }
-    if (parent.dtvValve2Count >= 5) {
+    if (parent.getValve2Count() >= 5) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet5) {
             getChildDevice("kohlerdtv:valve2_5").sendEvent(name: "valve", value: "open")
 			state.valve2Status[4] = true
@@ -282,7 +282,7 @@ void deviceStatus(hubResponse)
 			state.valve2Status[4] = false
         }
     }    
-    if (parent.dtvValve2Count >= 4) {
+    if (parent.getValve2Count() >= 4) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet4) {
             getChildDevice("kohlerdtv:valve2_4").sendEvent(name: "valve", value: "open")
 			state.valve2Status[3] = true
@@ -292,7 +292,7 @@ void deviceStatus(hubResponse)
 			state.valve2Status[3] = false
         }        
     }  
-    if (parent.dtvValve2Count >= 3) {
+    if (parent.getValve2Count() >= 3) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet3) {
             getChildDevice("kohlerdtv:valve2_3").sendEvent(name: "valve", value: "open")
 			state.valve2Status[2] = true
@@ -302,7 +302,7 @@ void deviceStatus(hubResponse)
 			state.valve2Status[2] = false
         }
     } 
-    if (parent.dtvValve2Count >= 2) {
+    if (parent.getValve2Count() >= 2) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet2) {
             getChildDevice("kohlerdtv:valve2_2").sendEvent(name: "valve", value: "open")
 			state.valve2Status[1] = true
@@ -312,7 +312,7 @@ void deviceStatus(hubResponse)
 			state.valve2Status[1] = false
         }        
     } 
-    if (parent.dtvValve2Count >= 1) {
+    if (parent.getValve2Count() >= 1) {
         if (data.valve2_Currentstatus == "On" && data.valve2outlet1) {
             getChildDevice("kohlerdtv:valve2_1").sendEvent(name: "valve", value: "open")
 			state.valve2Status[0] = true

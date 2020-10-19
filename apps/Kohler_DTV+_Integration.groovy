@@ -567,9 +567,10 @@ def cleanupSettings()
 	def deviceName = null
 
 	for (property in allProperties) {
-		if (dtvValve1Count < 6)
+		def valve1Count = dtvKonnect ? state.konnectDtvValve1Count : dtvValve1Count
+		if (valve1Count < 6)
 		{
-			for (def i = 6; i > dtvValve1Count; i--)
+			for (def i = 6; i > valve1Count; i--)
 			{
 				if (property.key == "dtvValve1_${i}")
 				{
@@ -577,9 +578,10 @@ def cleanupSettings()
 				}
 			}
 		}
-		if (dtvValve2Count < 6)
+		def valve2Count = dtvKonnect ? state.konnectDtvValve2Count : dtvValve2Count
+		if (valve2Count < 6)
 		{
-			for (def i = 6; i > dtvValve2Count; i--)
+			for (def i = 6; i > valve2Count; i--)
 			{
 				if (property.key == "dtvValve2_${i}")
 				{
@@ -587,9 +589,10 @@ def cleanupSettings()
 				}
 			}
 		}
-		if (dtvLightCount < 6)
+		def lightCount = dtvKonnect ? state.konnectDtvLightCount : dtvLightCount
+		if (lightCount < 6)
 		{
-			for (def i = 6; i > dtvValve2Count; i--)
+			for (def i = 6; i > lightCount; i--)
 			{
 				if (property.key == "dtvLight_${i}")
 				{
@@ -602,6 +605,18 @@ def cleanupSettings()
 			}
 		}
 	}
+}
+
+def getValve1Count() {
+	return dtvKonnect ? state.konnectDtvValve1Count : dtvValve1Count
+}
+
+def getValve2Count() {
+	return dtvKonnect ? state.konnectDtvValve2Count : dtvValve2Count
+}
+
+def getLightCount() {
+	return dtvKonnect ? state.konnectDtvLightCount : dtvLightCount
 }
 
 def handleOn(device, id) {
