@@ -2,9 +2,9 @@
 	"packageName": "Kohler DTV+ Integration",
 	"minimumHEVersion": "2.1.9",
 	"author": "Dominick Meglio",
-	"version": "1.0.5",
-	"dateReleased": "2020-10-19",
-	"releaseNotes": "Fixed issues when the device is configured during the initial setup using Konnect.",
+	"version": "1.1.0",
+	"dateReleased": "2020-10-24",
+	"releaseNotes": "Switched over to the new Microsoft Login method and switched to using MQTTS instead of HTTPS to improve performance.",
 	"documentationLink": "https://github.com/dcmeglio/hubitat-kohlerdtv/blob/master/README.md",
 	"apps" : [
 		{

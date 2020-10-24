@@ -7,12 +7,86 @@
  *	https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7LBRPJRLJSDDN&source=url
  *
  */
+
+ import groovy.json.JsonSlurper
  
 metadata {
     definition (name: "Kohler DTV+ Shower", namespace: "kohlerdtv", author: "dmeglio@gmail.com") {
 		capability "Switch"
+		capability "Initialize"
 		
 		command "startPreset", ["number"]
+    }
+}
+
+def initialize() {
+	log.debug "initializing"
+	schedule("0/10 * * * * ? *", updateDevices)
+	schedule("5 5/30 * * * ? *", updateDeviceConfig)
+	mqttConnectUntilSuccessful()
+}
+
+def mqttConnectUntilSuccessful() {
+	try {    
+        interfaces.mqtt.connect("ssl://" + parent.getMqttHost() + ":8883",
+            parent.getDeviceId(), 
+            "${parent.getMqttHost()}/${parent.getDeviceId()}/api-version=2016-11-14", 
+            parent.getSAS())
+        pauseExecution(3000)
+		return true
+	}
+	catch (e)
+	{
+		log.warn "Lost connection to MQTT, retrying in 15 seconds ${e}"
+		runIn(15, "mqttConnectUntilSuccessful")
+		return false
+	}
+}
+
+def sendCommand(sysid, type, code, msgBody) {
+	def body = [
+		messageid: UUID.randomUUID().toString(),
+		protocol: "MQTT",
+		timestamp:now().intdiv(1000),
+		ttl:"3000",
+		sku:"DTV",
+		type:"CTL",
+		internalid:UUID.randomUUID().toString(),
+		data: [
+			type: type,
+			attributes: [msgBody],
+			code: code
+		],
+
+		deviceid: parent.getDTVId(),
+		tenantid: parent.getTenantId(),
+		ver: "1.0",
+		sysid: sysid,
+		simulated: true,
+		durable: true
+	]
+	interfaces.mqtt.publish("devices/${parent.getDeviceId()}/messages/events/", groovy.json.JsonOutput.toJson(body), 0, false)
+}
+
+def parse(String message) {
+	log.debug message
+    def topic = interfaces.mqtt.parseMessage(message)
+  //  def payload = new JsonSlurper().parseText(topic.payload) 
+
+    log.debug topic
+}
+
+def mqttClientStatus(String message) {
+    log.debug "Status: " + message
+
+    if (message.startsWith("Error:")) {
+        log.error "MQTT Error: ${message}"
+        try {
+            interfaces.mqtt.disconnect() // Guarantee we're disconnected
+        }
+        catch (e) {
+        }
+		mqttConnectUntilSuccessful()
     }
 }
 
@@ -52,11 +126,7 @@ def updated() {
 	initialize()
 }
 
-def initialize() {
-	log.debug "initializing"
-	schedule("0/10 * * * * ? *", updateDevices)
-	schedule("5 5/30 * * * ? *", updateDeviceConfig)
-}
+
 
 def updateDevices()
 {
@@ -124,6 +194,7 @@ void deviceStatus(hubResponse)
     else {
         sendEvent(name: "switch", value: "off")
     }
+	
     if (parent.getLightCount() >= 3) {
         def lightDevice = getChildDevice("kohlerdtv:light_3")
         if (lightDevice.hasAttribute("level")) {
@@ -171,6 +242,7 @@ void deviceStatus(hubResponse)
     
     if (parent.getLightCount() >= 1) {
         def lightDevice = getChildDevice("kohlerdtv:light_1")
+
         if (lightDevice.hasAttribute("level")) {
             if (data.LZ1Status != "Off") {
                 def level1 = data.LZ1Status.replace("%","").toInteger()
@@ -389,24 +461,54 @@ def handleOpen(device, id) {
 	sendCgiCommand("quick_shower", data, null)
 }
 
+def getLightById(id) {
+	if (id.startsWith("light_1"))
+		return "1"
+	else if (id.startsWith("light_2"))
+		return "2"
+	else if (id.startsWith("light_3"))
+		return "3"
+}
+
 def handleOn(device, id) {
-	parent.handleOn(device, id)
+	sendCommand("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: getLightById(id),
+		brightness: "100",
+		status: "On"
+	])
 }
 
 def handleOff(device, id) {
-    parent.handleOff(device, id)
+    sendCommand("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: getLightById(id),
+		brightness: "0",
+		status: "Off"
+	])
 }
 
 def handleSetLevel(device, id, level) {
-	parent.handleSetLevel(device, id, level)
+	sendCommand("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
+		code: "LIGHT_BRIDGE_CTRL",
+		light: getLightById(id),
+		brightness: level.toString(),
+		status: "On"
+	])
 }
 
 def handleSetVolume(device, id, volumelevel) {
-	parent.handleSetVolume(device, id, volumelevel)
+	sendCommand("DTV-BR9RHTDJ", "control", "VOLUME_UP_DOWN_CTRL", [
+		code: "VOLUME_UP_DOWN_CTRL",
+		percentage: volumelevel.toString()
+	])
 }
 
 def handleSetInput(device, id, input) {
-	parent.handleSetInput(device, id, input)
+	sendCommand("DTV-BQXWX8DL", "control", "SELECT_AUDIO_SOURCE_CTRL", [
+		code: "SELECT_AUDIO_SOURCE_CTRL",
+		source: input
+	])
 }
 
 def handleClose(device, id) {

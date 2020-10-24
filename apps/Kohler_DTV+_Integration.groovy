@@ -114,7 +114,7 @@ def registerKonnectDevice() {
 	def body = '{"sku":"IOS","builddata":{"version":"1.7.4","type":"ios"},"serialnumber":"'+ deviceId + '"}'
 	def params = [
 		uri: "https://connect.kohler.io",
-		path: "/api/v1/platform/devices/identity/all/mobile",
+		path: "/IEF/api/v1/platform/devices/identity/all/mobile",
 		contentType: "application/json",
 		requestContentType: "application/json",
 		headers: [
@@ -149,14 +149,14 @@ def authenticateKohlerKonnect() {
 	def cookieJar = [:]
 
 	//Login screen
-	def params = [
-		uri: "https://login.microsoftonline.com",
-		path: "/te/konnectkohler.onmicrosoft.com/b2c_1_signinup/oauth2/v2.0/authorize",
+	def params = [	
+		uri: "https://konnectkohler.b2clogin.com",
+		path: "/konnectkohler.onmicrosoft.com/b2c_1a_app_sisu/oauth2/v2.0/authorize",
 		contentType: "text/html",
 		query: [
 			response_type: "code",
 			response_mode: "form_post",
-			scope: "https://konnectkohler.onmicrosoft.com/platformapi/read openid profile offline_access",
+			scope: "https://konnectkohler.onmicrosoft.com/PlatformAPI/read openid profile offline_access",
 			redirect_uri: "msaldee521c5-2a72-4fcd-8c4d-a044e607ca8b://auth",
 			client_id: "dee521c5-2a72-4fcd-8c4d-a044e607ca8b"
 		],
@@ -184,16 +184,16 @@ def authenticateKohlerKonnect() {
 	
 	// Send login
 	params = [
-		uri: "https://login.microsoftonline.com",
-		path: "/konnectkohler.onmicrosoft.com/B2C_1_SignInUp/SelfAsserted",
+		uri: "https://konnectkohler.b2clogin.com",
+		path: "/konnectkohler.onmicrosoft.com/B2C_1A_APP_SISU/SelfAsserted",
 		contentType: "application/x-www-form-urlencoded",
 		query: [
 			tx: transId,
-			p: "B2C_1_SignInUp"
+			p: "B2C_1A_APP_SISU"
 		],
 		body: [
 			request_type: "RESPONSE",
-			logonIdentifier: dtvKonnectUser,
+			signInName: dtvKonnectUser,
 			password: dtvKonnectPassword
 		],
 		headers: [
@@ -215,16 +215,15 @@ def authenticateKohlerKonnect() {
 			}
         }
 	}
-	
 	//Get the auth code
 
 	params = [
-		uri: "https://login.microsoftonline.com",
-		path: "/konnectkohler.onmicrosoft.com/B2C_1_SignInUp/api/CombinedSigninAndSignup/confirmed",
+		uri: "https://konnectkohler.b2clogin.com",
+		path: "/konnectkohler.onmicrosoft.com/B2C_1A_APP_SISU/api/CombinedSigninAndSignup/confirmed",
 		query: [
 			csrf_token: csrf,
 			tx: transId,
-			p: "B2C_1_SignInUp"
+			p: "B2C_1A_APP_SISU"
 		],
 		headers: [
 			"Cookie": cookiesFromJar(cookieJar)		
@@ -240,13 +239,13 @@ def authenticateKohlerKonnect() {
 	}
 
 	params = [
-		uri: "https://login.microsoftonline.com",
-		path: "/te/konnectkohler.onmicrosoft.com/b2c_1_signinup/oauth2/v2.0/token",
+		uri: "https://konnectkohler.b2clogin.com",
+		path: "/konnectkohler.onmicrosoft.com/b2c_1a_app_sisu/oauth2/v2.0/token",
 		requestContentType: "application/x-www-form-urlencoded",
 		contentType: "application/json",
 		body: [
 			client_info: 1,
-			scope: "https://konnectkohler.onmicrosoft.com/platformapi/read openid profile offline_access",
+			scope: "https://konnectkohler.onmicrosoft.com/PlatformAPI/read openid profile offline_access",			        
 			code: authCode,
 			grant_type: "authorization_code",
 			redirect_uri: "msaldee521c5-2a72-4fcd-8c4d-a044e607ca8b://auth",
@@ -283,7 +282,7 @@ def getKonnectDevices() {
 	def token = getAccessToken()
 	def params = [
 		uri: "https://connect.kohler.io",
-		path: "/api/v1/platform/tenant/devices",
+		path: "/IEF/api/v1/platform/tenant/devices",
 		contentType: "application/json",
 		headers: [
 			"Authorization": "Bearer ${token}"
@@ -307,7 +306,7 @@ def getKonnectDeviceDetails(deviceId) {
 	def token = getAccessToken()
 		def params = [
 		uri: "https://connect.kohler.io",
-		path: "/api/v1/platform/devices/dtv/${deviceId}/configuration",
+		path: "/IEF/api/v1/platform/devices/dtv/${deviceId}/configuration",
 		contentType: "application/json",
 		headers: [
 			"Authorization": "Bearer ${token}"
@@ -431,20 +430,29 @@ def createKonnectChildDevices() {
             showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Valve", "kohlerdtv:valve2_${i+1}", ["name": this.getProperty("dtvValve2_${i+1}"), isComponent: true])
     }
     for (def i = 0; i < state.konnectDtvLightCount; i++) {
+		def dimmable = false
+		if (i == 0 && state.konnectDtvLight1Dimmable)
+			dimmable = true
+		else if (i == 1 && state.konnectDtvLight2Dimmable)
+			dimmable = true
+		else if (i == 2 && state.konnectDtvLight3Dimmable)
+			dimmable = true
         if (!showerDevice.getChildDevice("kohlerdtv:light_${i+1}"))
         {
-			def dimmable = false
-			if (i == 0 && konnectDtvLight1Dimmable)
-				dimmable = true
-			else if (i == 1 && konnectDtvLight2Dimmable)
-				dimmable = true
-			else if (i == 2 && konnectDtvLight3Dimmable)
-				dimmable = true
             if (dimmable)
                 showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Dimmable Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
             else
                 showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
         }
+		else {
+			if (dimmable != showerDevice.getChildDevice("kohlerdtv:light_${i+1}").hasAttribute("level")) {
+				showerDevice.deleteChildDevice("kohlerdtv:light_${i+1}")
+				if (dimmable)
+					showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Dimmable Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
+				else
+					showerDevice.addChildDevice("kohlerdtv", "Kohler DTV+ Light", "kohlerdtv:light_${i+1}", ["name": this.getProperty("dtvLight_${i+1}"), isComponent: true])
+			}
+		}
     }
 	
 	if (state.konnectDtvValve1Count > 0)
@@ -619,77 +627,6 @@ def getLightCount() {
 	return dtvKonnect ? state.konnectDtvLightCount : dtvLightCount
 }
 
-def handleOn(device, id) {
-	if (dtvKonnect) {
-		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
-			code: "LIGHT_BRIDGE_CTRL",
-			light: getLightById(id),
-			brightness: "100",
-			status: "On"
-		])
-	}
-	else
-		log.error "Lights are not supported without a Konnect bridge"
-
-}
-
-def handleOff(device, id) {
-	if (dtvKonnect) {
-		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
-			code: "LIGHT_BRIDGE_CTRL",
-			light: getLightById(id),
-			brightness: "0",
-			status: "Off"
-		])
-	}
-	else
-		log.error "Lights are not supported without a Konnect bridge"
-}
-
-def handleSetVolume(device, id, volumelevel) {
-	if (dtvKonnect) {
-		mqttOverHttps("DTV-BR9RHTDJ", "control", "VOLUME_UP_DOWN_CTRL", [
-			code: "VOLUME_UP_DOWN_CTRL",
-			percentage: volumelevel.toString()
-		])
-	}
-	else
-		log.error "Volume is not supported without a Konnect bridge"
-}
-
-def handleSetInput(device, id, input) {
-	if (dtvKonnect) {
-		mqttOverHttps("DTV-BQXWX8DL", "control", "SELECT_AUDIO_SOURCE_CTRL", [
-			code: "SELECT_AUDIO_SOURCE_CTRL",
-			source: input
-		])
-	}
-	else
-		log.error "Audio input is not supported without a Konnect bridge"
-}
-
-def handleSetLevel(device, id, level) {
-	if (dtvKonnect) {
-		mqttOverHttps("DTV-BSNBBLPH", "control", "LIGHT_BRIDGE_CTRL", [
-			code: "LIGHT_BRIDGE_CTRL",
-			light: getLightById(id),
-			brightness: level.toString(),
-			status: "On"
-		])
-	}
-	else
-		log.error "Lights are not supported without a Konnect bridge"
-}
-
-def getLightById(id) {
-	if (id.startsWith("light_1"))
-		return "1"
-	else if (id.startsWith("light_2"))
-		return "2"
-	else if (id.startsWith("light_3"))
-		return "3"
-}
-
 def logDebug(msg) {
     if (settings?.debugOutput) {
 		log.debug msg
@@ -717,48 +654,23 @@ def renewSasIfNeeded() {
 	}
 }
 
-def mqttOverHttps(sysid, type, code, msgBody) {
-	renewSasIfNeeded()
-	def body = [
-		messageid: UUID.randomUUID().toString(),
-		protocol: "MQTT",
-		timestamp:now().intdiv(1000),
-		ttl:"3000",
-		sku:"DTV",
-		type:"CTL",
-		internalid:UUID.randomUUID().toString(),
-		data: [
-			type: type,
-			attributes: [msgBody],
-			code: code
-		],
+def getMqttHost() {
+	return state.hostname
+}
 
-		deviceid: dtv,
-		tenantid: state.tenantid,
-		ver: "1.0",
-		sysid: sysid,
-		simulated: true,
-		durable: true
-	]
-	
-	def params = [
-		uri: "https://" + state.hostname,
-		path: "/devices/" + state.deviceid + "/messages/events",
-		query: [ "api-version": "2016-11-14"],
-		contentType: "text/plain",
-		requestContentType: "text/plain",
-		headers: [
-			"Authorization": state.sas,
-			"Host": state.hostname
-		],
-		body: groovy.json.JsonOutput.toJson(body)
-    ]
-	def result = false
-	httpPost(params) { resp ->
-		if (resp.status == 204)
-            result = true
-        else
-            result = false
-	}
-    return result
+def getDeviceId() {
+	return state.deviceid
+}
+
+def getSAS() {
+	renewSasIfNeeded()
+	return state.sas
+}
+
+def getTenantId() {
+	return state.tenantid
+}
+
+def getDTVId() {
+	return dtv
 }
